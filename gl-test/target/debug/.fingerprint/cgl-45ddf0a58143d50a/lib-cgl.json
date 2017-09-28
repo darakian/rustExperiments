@@ -1,0 +1,1 @@
+{"rustc":6633642895550766167,"target":4432632030155323433,"profile":11154289914177168617,"local":{"variant":"Precalculated","fields":["0.2.1"]},"features":"None","deps":[["gleam v0.4.8",6971747556558263282],["libc v0.2.30",3778409956291847335]],"rustflags":[]}

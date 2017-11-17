@@ -1,5 +1,4 @@
 use std::fs;
-use blake2::{Blake2b, Digest};
 
 fn main() {
     let first_dir = String::from(".");
@@ -7,6 +6,7 @@ fn main() {
 }
 
 fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
+    println!("Entering directory: {:?}", current_dir);
     let mut files: Vec<String> = Vec::new();
     let mut sub_directories: Vec<std::fs::DirEntry> = Vec::new();
 
@@ -27,11 +27,11 @@ fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
         let the_file = std::fs::File::open(entry);
 
         //let item = entry?;
-        println!("{:?} is a file", entry);
+        println!("File: {:?}", entry);
     }
 
-    for entry in sub_directories.iter(){
-        println!("{:?} is a dir", entry.path());
+    for sub_dir in sub_directories.iter(){
+        recurse_on_dir(sub_dir.file_name().into_string().unwrap());
     }
     Ok(())
 }

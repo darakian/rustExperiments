@@ -9,6 +9,7 @@ fn main() {
     //recurse_on_dir(first_dir);
 }
 
+
 fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
     println!("Entering directory: {:?}", current_dir);
     let mut files: Vec<String> = Vec::new();

@@ -21,14 +21,14 @@ fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
             files.push(item.file_name().into_string().unwrap());
         } else{
             //println!("{:?} is a dir", item.path());
-            sub_directories.push(item.path().to_str()+item.file_name().into_string().unwrap());
+            sub_directories.push();
         }
     }
     //Print current files and hashes
     for entry in files.iter() {
         let the_file = std::fs::File::open(entry);
         //let item = entry?;
-        println!("File: {:?}", entry.path().to_str()+entry.file_name().into_string().unwrap());
+        println!("File: {:?}", entry.file_name().into_string().unwrap());
 
         // let mut file = fs::File::open(&path)?;
         // let hash = Blake2b::digest_reader(&mut file)?;
@@ -36,7 +36,7 @@ fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
     }
     for sub_dir in sub_directories.iter(){
         println!("Dir: {:?}", sub_dir.file_name().into_string().unwrap());
-        recurse_on_dir(sub_dir.path()+sub_dir.file_name().into_string().unwrap());
+        recurse_on_dir();
     }
     Ok(())
 }

@@ -1,11 +1,12 @@
-use std::fs;
+use std::fs::{self, DirEntry};
+use std::path::Path;
 use std::env;
-use blake2::{Blake2b, Digest};
+//use blake2::{Blake2b, Digest};
 
 fn main() {
-    let first_dir = env::args().nth(1).expect("Missing argument");
+    let first_dir = Path::new(env::args().nth(1).expect("Missing argument"));
     let second_dir = env::args().nth(1).expect("Missing argument");
-    recurse_on_dir(first_dir);
+    //recurse_on_dir(first_dir);
 }
 
 fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
@@ -21,27 +22,27 @@ fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
             files.push(item.file_name().into_string().unwrap());
         } else{
             //println!("{:?} is a dir", item.path());
-            sub_directories.push();
+            //sub_directories.push();
         }
     }
     //Print current files and hashes
     for entry in files.iter() {
         let the_file = std::fs::File::open(entry);
         //let item = entry?;
-        println!("File: {:?}", entry.file_name().into_string().unwrap());
+        println!("File: {:?}", entry);
 
         // let mut file = fs::File::open(&path)?;
         // let hash = Blake2b::digest_reader(&mut file)?;
         // println!("{:x}\t{}", hash, path);
     }
     for sub_dir in sub_directories.iter(){
-        println!("Dir: {:?}", sub_dir.file_name().into_string().unwrap());
-        recurse_on_dir();
+        println!("Dir: {:?}", sub_dir);
+        //recurse_on_dir();
     }
     Ok(())
 }
 
-fn visit_dirs(dir: &Path, cb: &Fn(&DirEntry)) -> io::Result<()> {
+fn visit_dirs(dir: &Path, cb: &Fn(&DirEntry)) -> std::io::Result<()> {
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;

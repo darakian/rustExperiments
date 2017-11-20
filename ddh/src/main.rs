@@ -13,11 +13,12 @@ fn main() {
         return;
     } else if args.len() == 2 {
         let first_path = Path::new(&args[1]);
-        println!("Arg1: {:?}", &args[1]);
+        let directory_vector = recurse_on_dir(first_path);
     } else if args.len() == 3 {
         let first_path = Path::new(&args[1]);
         let second_path = Path::new(&args[2]);
-        println!("Arg1: {:?} Arg2: {:?}", &args[1], &args[2]);
+        let first_directory_vector = recurse_on_dir(first_path);
+        let second_directory_vector = recurse_on_dir(first_path);
     } else {
         //Wtf? How are we here?
         println!("How are we here?");
@@ -28,34 +29,22 @@ fn main() {
 }
 
 fn recurse_on_dir(current_dir: &Path) -> Result<Vec<String>, io::Error>{
-    println!("Entering directory: {:?}", current_dir.to_str());
+    println!("Entering directory: {:?}", current_dir.to_str().unwrap());
     let mut files: Vec<String> = Vec::new();
-    let mut sub_directories: Vec<String> = Vec::new();
+    let mut sub_directories: Vec<Box<Path>> = Vec::new();
 
     //Read files and directories
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
-        if (item.file_type()?.is_file()){
-            //println!("{:?} is a file", item.path());
+        if item.file_type()?.is_file(){
             files.push(item.file_name().into_string().unwrap());
         } else{
-            //println!("{:?} is a dir", item.path());
-            //sub_directories.push();
+            sub_directories.push(item.path().into_boxed_path());
         }
     }
-    //Print current files and hashes
-    for entry in files.iter() {
-        let the_file = std::fs::File::open(entry);
-        //let item = entry?;
-        println!("File: {:?}", entry);
 
-        // let mut file = fs::File::open(&path)?;
-        // let hash = Blake2b::digest_reader(&mut file)?;
-        // println!("{:x}\t{}", hash, path);
-    }
     for sub_dir in sub_directories.iter(){
-        println!("Dir: {:?}", sub_dir);
-        //recurse_on_dir();
+        recurse_on_dir(&*sub_dir);
     }
     return Ok(files)
 }

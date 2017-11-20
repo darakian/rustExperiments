@@ -27,7 +27,7 @@ fn main() {
         let second_path = Path::new(&argument2);
     } else {
         //Wtf? How are we here?
-        println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
+        println!("How are we here?");
         println!("Usage: ddh dir_1 {{dir_2}}");
         return;
     }

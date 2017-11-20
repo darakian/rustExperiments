@@ -12,14 +12,15 @@ fn main() {
         //Print usage
     } else if (argument1.is_empty()) && !(argument2.is_empty()){
         //Single dir usage
+        let first_path = Path::new(&argument1);
     } else if !(argument1.is_empty()) && !(argument2.is_empty()) {
-
+        //Normal usage
+        let first_path = Path::new(&argument1);
     } else {
         //Wtf? How are we here?
     }
 
-    let first_path = Path::new(&argument1);
-    let second_dir = env::args().nth(1).expect("Missing argument");
+
     //recurse_on_dir(first_dir);
 }
 

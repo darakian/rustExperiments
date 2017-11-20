@@ -4,27 +4,20 @@ use std::env;
 //use blake2::{Blake2b, Digest};
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
     //Check Args length
-    if env::args().count() == 1 {
+    if args.len() == 1 {
         //Print usage
         println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
         println!("Usage: ddh dir_1 {{dir_2}}");
         return;
-    }
-    let argument1 = (String::from(env::args().nth(1).expect("Missing argument")));
-    let argument2 = (String::from(env::args().nth(2).expect("Missing argument")));
-    if (argument1.is_empty()) && (argument2.is_empty()) {
-        //Print usage
-        println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
-        println!("Usage: ddh dir_1 {{dir_2}}");
-        return;
-    } else if (argument1.is_empty()) && !(argument2.is_empty()){
-        //Single dir usage
-        let first_path = Path::new(&argument1);
-    } else if !(argument1.is_empty()) && !(argument2.is_empty()) {
-        //Normal usage
-        let first_path = Path::new(&argument1);
-        let second_path = Path::new(&argument2);
+    } else if args.len() == 2 {
+        let first_path = Path::new(&args[1]);
+        println!("Arg1: {:?}", &args[1]);
+    } else if args.len() == 3 {
+        let first_path = Path::new(&args[1]);
+        let second_path = Path::new(&args[2]);
+        println!("Arg1: {:?} Arg2: {:?}", &args[1], &args[2]);
     } else {
         //Wtf? How are we here?
         println!("How are we here?");

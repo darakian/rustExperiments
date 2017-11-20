@@ -8,32 +8,29 @@ fn main() {
     if env::args().count() == 1 {
         //Print usage
         println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
-        println!("Usage: ddh dir_1 {dir_2}");
+        println!("Usage: ddh dir_1 {{dir_2}}");
         return;
     }
+    let argument1 = (String::from(env::args().nth(1).expect("Missing argument")));
+    let argument2 = (String::from(env::args().nth(2).expect("Missing argument")));
     if (argument1.is_empty()) && (argument2.is_empty()) {
         //Print usage
         println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
-        println!("Usage: ddh dir_1 {dir_2}");
+        println!("Usage: ddh dir_1 {{dir_2}}");
         return;
     } else if (argument1.is_empty()) && !(argument2.is_empty()){
         //Single dir usage
-        let argument1 = (String::from(env::args().nth(1).expect("Missing argument")));
         let first_path = Path::new(&argument1);
     } else if !(argument1.is_empty()) && !(argument2.is_empty()) {
         //Normal usage
-        let argument1 = (String::from(env::args().nth(1).expect("Missing argument")));
-        let argument2 = (String::from(env::args().nth(2).expect("Missing argument")));
         let first_path = Path::new(&argument1);
         let second_path = Path::new(&argument2);
     } else {
         //Wtf? How are we here?
         println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
-        println!("Usage: ddh dir_1 {dir_2}");
+        println!("Usage: ddh dir_1 {{dir_2}}");
         return;
     }
-
-
     //recurse_on_dir(first_dir);
 }
 

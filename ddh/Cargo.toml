@@ -4,5 +4,3 @@ version = "0.1.0"
 authors = ["Jon Moroney <j.moroney@cs.ru.nl>"]
 
 [dependencies]
-blake2 = "0.7"
-digest = { version = "0.7", features = ["std"]}

@@ -1,7 +1,6 @@
 use std::fs::{self, DirEntry};
 use std::path::Path;
 use std::env;
-//use blake2::{Blake2b, Digest};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -27,8 +26,8 @@ fn main() {
     //recurse_on_dir(first_dir);
 }
 
-fn recurse_on_dir(current_dir: String) -> std::io::Result<()>{
-    println!("Entering directory: {:?}", current_dir);
+fn recurse_on_dir(current_dir: &Path) -> std::io::Result<()>{
+    println!("Entering directory: {:?}", current_dir.to_str());
     let mut files: Vec<String> = Vec::new();
     let mut sub_directories: Vec<String> = Vec::new();
 

@@ -44,7 +44,7 @@ fn recurse_on_dir(current_dir: &Path) -> Result<Vec<String>, io::Error>{
     }
 
     for sub_dir in sub_directories.iter(){
-        recurse_on_dir(&*sub_dir);
+        recurse_on_dir(&*sub_dir)?;
     }
     return Ok(files)
 }

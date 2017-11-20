@@ -1,7 +1,10 @@
-use std::fs::{self, DirEntry};
-use std::path::Path;
 use std::io;
 use std::env;
+use std::path::Path;
+use std::fs::{self, DirEntry};
+
+extern crate sha2;
+use sha2::{Sha256, Digest};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -25,6 +28,7 @@ fn main() {
         println!("Usage: ddh dir_1 {{dir_2}}");
         return;
     }
+
     //recurse_on_dir(first_dir);
 }
 
@@ -37,6 +41,9 @@ fn recurse_on_dir(current_dir: &Path) -> Result<Vec<String>, io::Error>{
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_file(){
+            let mut file = fs::File::open(item.path())?;
+            let hash = Sha256::digest_reader(&mut file)?;
+            println!("{:x}\t{}", hash, item.file_name().into_string().unwrap());
             files.push(item.file_name().into_string().unwrap());
         } else{
             sub_directories.push(item.path().into_boxed_path());
@@ -44,7 +51,9 @@ fn recurse_on_dir(current_dir: &Path) -> Result<Vec<String>, io::Error>{
     }
 
     for sub_dir in sub_directories.iter(){
-        recurse_on_dir(&*sub_dir)?;
+        let additional_files = recurse_on_dir(&*sub_dir)?;
+        files.extend_from_slice(&additional_files);
     }
+
     return Ok(files)
 }

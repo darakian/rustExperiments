@@ -1,5 +1,6 @@
 use std::fs::{self, DirEntry};
 use std::path::Path;
+use std::io;
 use std::env;
 
 fn main() {
@@ -26,7 +27,7 @@ fn main() {
     //recurse_on_dir(first_dir);
 }
 
-fn recurse_on_dir(current_dir: &Path) -> std::io::Result<()>{
+fn recurse_on_dir(current_dir: &Path) -> Result<Vec<String>, io::Error>{
     println!("Entering directory: {:?}", current_dir.to_str());
     let mut files: Vec<String> = Vec::new();
     let mut sub_directories: Vec<String> = Vec::new();
@@ -56,7 +57,7 @@ fn recurse_on_dir(current_dir: &Path) -> std::io::Result<()>{
         println!("Dir: {:?}", sub_dir);
         //recurse_on_dir();
     }
-    Ok(())
+    return Ok(files)
 }
 
 fn visit_dirs(dir: &Path, cb: &Fn(&DirEntry)) -> std::io::Result<()> {

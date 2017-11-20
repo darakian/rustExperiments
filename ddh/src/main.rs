@@ -4,7 +4,21 @@ use std::env;
 //use blake2::{Blake2b, Digest};
 
 fn main() {
-    let first_dir = Path::new(env::args().nth(1).expect("Missing argument"));
+    //Check Args length
+
+    let argument1 = (String::from(env::args().nth(1).expect("Missing argument")));
+    let argument2 = (String::from(env::args().nth(2).expect("Missing argument")));
+    if (argument1.is_empty()) && (argument2.is_empty()) {
+        //Print usage
+    } else if (argument1.is_empty()) && !(argument2.is_empty()){
+        //Single dir usage
+    } else if !(argument1.is_empty()) && !(argument2.is_empty()) {
+
+    } else {
+        //Wtf? How are we here?
+    }
+
+    let first_path = Path::new(&argument1);
     let second_dir = env::args().nth(1).expect("Missing argument");
     //recurse_on_dir(first_dir);
 }

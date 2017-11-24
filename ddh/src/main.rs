@@ -20,7 +20,7 @@ fn main() {
         let first_path = Path::new(&args[1]);
         let directory_result = recurse_on_dir(first_path);
         for entry in directory_result.unwrap().iter(){
-            println!("{:x} >> {} >> {} bytes", entry.1, entry.0, entry.2);
+            println!("{:x} >> {} bytes", entry.1, entry.2);
         }
     } else if args.len() == 3 {
         let first_path = Path::new(&args[1]);
@@ -29,14 +29,8 @@ fn main() {
         let second_directory_result: HashSet<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = HashSet::from_iter(recurse_on_dir(first_path).unwrap());
         let common_files = first_directory_result.intersection(&second_directory_result);
         let symmetric_difference = first_directory_result.symmetric_difference(&second_directory_result);
-        let mut common_files_size: u64 = 0;
-        let mut difference_size: u64 = 0;
-        for element in common_files{
-            common_files_size = common_files_size+element.2;
-        }
-        for element in symmetric_difference{
-            difference_size = difference_size+element.2;
-        }
+        let common_files_size = common_files.fold(0, |sum, x| sum+x.2);
+        let difference_size = symmetric_difference.fold(0, |sum, x| sum+x.2);
         println!("{} bytes in common\n{} bytes difference", common_files_size, difference_size);
     } else {
         //Wtf? How are we here?

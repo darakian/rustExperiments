@@ -26,7 +26,7 @@ fn main() {
         let first_path = Path::new(&args[1]);
         let second_path = Path::new(&args[2]);
         let first_directory_result: HashSet<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = HashSet::from_iter(recurse_on_dir(first_path).unwrap());
-        let second_directory_result: HashSet<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = HashSet::from_iter(recurse_on_dir(first_path).unwrap());
+        let second_directory_result: HashSet<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = HashSet::from_iter(recurse_on_dir(second_path).unwrap());
         let common_files = first_directory_result.intersection(&second_directory_result);
         let symmetric_difference = first_directory_result.symmetric_difference(&second_directory_result);
         let common_files_size = common_files.fold(0, |sum, x| sum+x.2);

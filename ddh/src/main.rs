@@ -1,11 +1,14 @@
 use std::io;
+use std::io::Read;
 use std::env;
 use std::path::Path;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::fs::{self};
 extern crate sha2;
-use sha2::{Sha256, Digest};
+//use sha2::{Sha256, Digest};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hasher;
 extern crate generic_array;
 
 fn main() {
@@ -25,8 +28,8 @@ fn main() {
     } else if args.len() == 3 {
         let first_path = Path::new(&args[1]);
         let second_path = Path::new(&args[2]);
-        let first_directory_result: HashSet<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = HashSet::from_iter(recurse_on_dir(first_path).unwrap());
-        let second_directory_result: HashSet<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = HashSet::from_iter(recurse_on_dir(second_path).unwrap());
+        let first_directory_result: HashSet<(String, u64, u64)> = HashSet::from_iter(recurse_on_dir(first_path).unwrap());
+        let second_directory_result: HashSet<(String, u64, u64)> = HashSet::from_iter(recurse_on_dir(second_path).unwrap());
         let common_files = first_directory_result.intersection(&second_directory_result);
         let symmetric_difference = first_directory_result.symmetric_difference(&second_directory_result);
         let common_files_size = common_files.fold(0, |sum, x| sum+x.2);
@@ -40,16 +43,21 @@ fn main() {
     }
 }
 
-fn recurse_on_dir(current_dir: &Path) -> Result<Vec<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)>, io::Error>{
-    let mut files: Vec<(String, generic_array::GenericArray<u8, generic_array::typenum::U32>, u64)> = Vec::new();
+fn recurse_on_dir(current_dir: &Path) -> Result<Vec<(String, u64, u64)>, io::Error>{
+    let mut files: Vec<(String, u64, u64)> = Vec::new();
     let mut sub_directories: Vec<Box<Path>> = Vec::new();
     //Read files and directories
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_file(){
             let mut file = fs::File::open(item.path())?;
-            let hash = Sha256::digest_reader(&mut file)?;
-            files.push((item.file_name().into_string().unwrap(), hash, item.metadata().unwrap().len()));
+            //let mut file_buffer: [u8; file.metadata().unwrap().len()] = [0; file.metadata().unwrap().len()];
+            let mut file_contents = Vec::with_capacity(file.metadata().unwrap().len() as usize);
+            file.read_to_end(&mut file_contents)?;
+            let mut hasher = DefaultHasher::new();
+            hasher.write(&file_contents);
+            let hash = hasher.finish();
+            files.push((item.file_name().into_string().unwrap(), hash, file.metadata().unwrap().len()));
         } else{
             sub_directories.push(item.path().into_boxed_path());
         }

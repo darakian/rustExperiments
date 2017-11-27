@@ -5,11 +5,8 @@ use std::path::Path;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::fs::{self};
-extern crate sha2;
-//use sha2::{Sha256, Digest};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
-extern crate generic_array;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -51,7 +48,6 @@ fn recurse_on_dir(current_dir: &Path) -> Result<Vec<(String, u64, u64)>, io::Err
         let item = entry?;
         if item.file_type()?.is_file(){
             let mut file = fs::File::open(item.path())?;
-            //let mut file_buffer: [u8; file.metadata().unwrap().len()] = [0; file.metadata().unwrap().len()];
             let mut file_contents = Vec::with_capacity(file.metadata().unwrap().len() as usize);
             file.read_to_end(&mut file_contents)?;
             let mut hasher = DefaultHasher::new();

@@ -4,6 +4,3 @@ version = "0.1.0"
 authors = ["Jon Moroney <j.moroney@cs.ru.nl>"]
 
 [dependencies]
-sha2 = "0.7.0"
-digest = { version = "0.7", features = ["std"]}
-generic-array = "0.9.0"

@@ -17,15 +17,15 @@ fn main() {
         return;
     } else if args.len() == 2 {
         let first_path = Path::new(&args[1]);
-        let directory_result = recurse_on_dir(first_path);
+        let directory_result = recurse_on_dir(first_path, &mut HashSet::new());
         for entry in directory_result.unwrap().iter(){
             println!("{:x} >> {} bytes", entry.1, entry.2);
         }
     } else if args.len() == 3 {
         let first_path = Path::new(&args[1]);
         let second_path = Path::new(&args[2]);
-        let first_directory_result = recurse_on_dir(first_path).unwrap();
-        let second_directory_result = recurse_on_dir(second_path).unwrap();
+        let first_directory_result = recurse_on_dir(first_path, &mut HashSet::new()).unwrap();
+        let second_directory_result = recurse_on_dir(second_path, &mut HashSet::new()).unwrap();
         let common_files = first_directory_result.intersection(&second_directory_result);
         let symmetric_difference = first_directory_result.symmetric_difference(&second_directory_result);
         let common_files_size = common_files.fold(0, |sum, x| sum+x.2);
@@ -39,14 +39,12 @@ fn main() {
     }
 }
 
-fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{
-    let mut files: HashSet<(String, u64, u64)> = HashSet::new();
-
+fn recurse_on_dir(current_dir: &Path, files: &mut HashSet<(String, u64, u64)>) -> Result<HashSet<(String, u64, u64)>, io::Error>{
     //Read files and directories
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){
-            let additional_files = recurse_on_dir(&item.path())?;
+            let additional_files = recurse_on_dir(&item.path(), files)?;
             files.extend(additional_files);
         } else if item.file_type()?.is_file(){
             let mut file = fs::File::open(item.path())?;
@@ -58,7 +56,6 @@ fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io:
             files.insert((item.file_name().into_string().unwrap(), hash, file.metadata().unwrap().len()));
         }
     }
-
     files.shrink_to_fit();
     return Ok(files)
 }

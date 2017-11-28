@@ -41,11 +41,14 @@ fn main() {
 
 fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{
     let mut files: HashSet<(String, u64, u64)> = HashSet::new();
-    let mut sub_directories: Vec<Box<Path>> = Vec::new();
+
     //Read files and directories
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
-        if item.file_type()?.is_file(){
+        if item.file_type()?.is_dir(){
+            let additional_files = recurse_on_dir(&item.path())?;
+            files.extend(additional_files);
+        } else if item.file_type()?.is_file(){
             let mut file = fs::File::open(item.path())?;
             let mut file_contents = Vec::with_capacity(file.metadata().unwrap().len() as usize);
             file.read_to_end(&mut file_contents)?;
@@ -53,13 +56,9 @@ fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io:
             hasher.write(&file_contents);
             let hash = hasher.finish();
             files.insert((item.file_name().into_string().unwrap(), hash, file.metadata().unwrap().len()));
-        } else{
-            sub_directories.push(item.path().into_boxed_path());
         }
     }
-    for sub_dir in sub_directories.iter(){
-        let additional_files = recurse_on_dir(&*sub_dir)?;
-        files.extend(additional_files.iter().cloned());
-    }
+
+    files.shrink_to_fit();
     return Ok(files)
 }

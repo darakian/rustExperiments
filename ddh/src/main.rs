@@ -2,7 +2,7 @@ use std::io;
 use std::io::Read;
 use std::env;
 use std::path::Path;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fs::{self};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
@@ -39,8 +39,8 @@ fn main() {
     }
 }
 
-fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{
-    let mut files: HashSet<(String, u64, u64)> = HashSet::new();
+fn recurse_on_dir(current_dir: &Path) -> Result<BTreeSet<(String, u64, u64)>, io::Error>{
+    let mut files: BTreeSet<(String, u64, u64)> = BTreeSet::new();
     let mut sub_directories: Vec<Box<Path>> = Vec::new();
     //Read files and directories
     for entry in fs::read_dir(current_dir)? {

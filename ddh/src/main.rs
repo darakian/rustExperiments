@@ -45,7 +45,7 @@ fn main() {
     let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
     let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
-    println!("{:?} Total files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
+    println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
     println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.2))/display_divisor, blocksize);
 }

@@ -20,7 +20,7 @@ fn main() {
                                .long("directories")
                                .value_name("FILE")
                                .help("Directories to parse")
-                               .min_values(2)
+                               .min_values(1)
                                .required(true)
                                .takes_value(true)
                                .index(1))
@@ -39,7 +39,7 @@ fn main() {
     let display_divisor =  1024u64.pow(display_power);
     let directory_results: Vec<_> = directories.into_iter().map(|x| recurse_on_dir(Path::new(&x)).unwrap()).collect();
     let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
-    let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
+    let common_files = directory_results.iter().fold(&complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     println!("{:?} Total files with {:?} total {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
     println!("{:?} Common files with {:?} common {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
     println!("{:?} Unique files with {:?} unique {}", complete_files.len()-common_files.len(), (complete_files.iter().fold(0, |sum, x| sum+x.2)-common_files.iter().fold(0, |sum, x| sum+x.2))/display_divisor, blocksize);

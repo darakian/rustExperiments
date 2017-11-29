@@ -40,21 +40,27 @@ fn main() {
 }
 
 fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{
-    let mut files: HashSet<(String, u64, u64)> = HashSet::new();
+    let mut file_set: HashSet<(String, u64, u64)> = HashSet::new();
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){
             let additional_files = recurse_on_dir(&item.path())?;
-            files.extend(additional_files);
+            file_set.extend(additional_files);
         } else if item.file_type()?.is_file(){
-            let mut file = fs::File::open(item.path())?;
-            let mut file_contents = Vec::with_capacity(file.metadata().unwrap().len() as usize);
-            file.read_to_end(&mut file_contents)?;
-            let mut hasher = DefaultHasher::new();
-            hasher.write(&file_contents);
-            let hash = 1;//hasher.finish();
-            files.insert((item.file_name().into_string().unwrap(), hash, file.metadata().unwrap().len()));
+            let hash = hash_file(&item.path())?;
+            file_set.insert((item.file_name().into_string().unwrap(), hash, item.metadata().unwrap().len()));
         }
     }
-    return Ok(files)
+    return Ok(file_set)
+}
+
+fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
+    let mut four_k_buf = [0;4096];
+    let mut hasher = DefaultHasher::new();
+    let mut file = fs::File::open(file_path)?;
+    while file.read(&mut four_k_buf).is_ok() {
+        hasher.write(&four_k_buf)
+    }
+    let hash = hasher.finish();
+    return Ok(hash);
 }

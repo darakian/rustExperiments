@@ -42,6 +42,7 @@ fn main() {
     let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     println!("{:?} Total files with {:?} total {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
     println!("{:?} Common files with {:?} common {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
+    println!("{:?} Unique files with {:?} unique {}", complete_files.len()-common_files.len(), (complete_files.iter().fold(0, |sum, x| sum+x.2)-common_files.iter().fold(0, |sum, x| sum+x.2))/display_divisor, blocksize);
 }
 
 fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{

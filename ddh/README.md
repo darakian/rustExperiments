@@ -1,4 +1,4 @@
-# The **D**irectory **D**ifferential **H**tool
+# The **D**irectory **D**ifferential **h**Tool
 The H is silent. This tool is called DDH for two very good reasons
 * DDT is a dangerous pesticide
 * I mistyped when I created the project

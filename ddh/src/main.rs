@@ -23,15 +23,13 @@ fn main() {
             println!("{:x} >> {} bytes", entry.1, entry.2);
         }
     } else if args.len() == 3 {
-        let first_path = Path::new(&args[1]);
-        let second_path = Path::new(&args[2]);
-        let first_directory_result = recurse_on_dir(first_path).unwrap();
-        let second_directory_result = recurse_on_dir(second_path).unwrap();
+        let first_directory_result = recurse_on_dir(Path::new(&args[1])).unwrap();
+        let second_directory_result = recurse_on_dir(Path::new(&args[2])).unwrap();
         let common_files = first_directory_result.intersection(&second_directory_result);
         let symmetric_difference = first_directory_result.symmetric_difference(&second_directory_result);
         let common_files_size = common_files.fold(0, |sum, x| sum+x.2);
         let difference_size = symmetric_difference.fold(0, |sum, x| sum+x.2);
-        println!("{} bytes in common\n{} bytes difference", common_files_size, difference_size);
+        println!("{} Megabytes in common\n{} Megabytes difference", common_files_size/(1024*1024), difference_size/(1024*1024));
     } else {
         //Wtf? How are we here?
         println!("How are we here?");

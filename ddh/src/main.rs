@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Read;
+use std::io::BufReader;
 use std::env;
 use std::path::Path;
 use std::collections::HashSet;
@@ -55,11 +56,11 @@ fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io:
 }
 
 fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
-    let mut four_k_buf = [0;4096];
     let mut hasher = DefaultHasher::new();
-    let mut file = fs::File::open(file_path)?;
-    while file.read(&mut four_k_buf).is_ok() {
-        hasher.write(&four_k_buf)
+    let file = fs::File::open(file_path)?;
+    let buffer_reader = BufReader::new(file);
+    for byte in buffer_reader.bytes() {
+        hasher.write(&[byte.unwrap()]);
     }
     let hash = hasher.finish();
     return Ok(hash);

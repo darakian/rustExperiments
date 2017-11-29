@@ -30,6 +30,10 @@ fn main() {
                                .takes_value(true)
                                .possible_values(&["K", "M", "G"])
                                .help("Sets the display blocksize to Kilobyte, Megabyte, or Gigabyte. Default is Byte."))
+                          .arg(Arg::with_name("Hidden")
+                               .short("h")
+                               .long("hidden")
+                               .help("Searches hidden folders. NOT YET IMPLEMENTED."))
                           .get_matches();
 
     let directories = arguments.values_of("directories").unwrap();

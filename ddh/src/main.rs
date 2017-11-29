@@ -1,41 +1,47 @@
 use std::io;
 use std::io::Read;
 use std::io::BufReader;
-use std::env;
 use std::path::Path;
 use std::collections::HashSet;
 use std::fs::{self};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 
+extern crate clap;
+use clap::{Arg, App};
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    //Check Args length
-    if args.len() == 1 {
-        //Print usage
-        println!("{:?}: Missing Argument", env::args().nth(0).unwrap());
-        println!("Usage: ddh dir_1 {{dir_2}}");
-        return;
-    } else if args.len() == 2 {
-        let first_path = Path::new(&args[1]);
-        let directory_result = recurse_on_dir(first_path);
-        for entry in directory_result.unwrap().iter(){
-            println!("{:x} >> {} bytes", entry.1, entry.2);
-        }
-    } else if args.len() == 3 {
-        let first_directory_result = recurse_on_dir(Path::new(&args[1])).unwrap();
-        let second_directory_result = recurse_on_dir(Path::new(&args[2])).unwrap();
-        let common_files = first_directory_result.intersection(&second_directory_result);
-        let symmetric_difference = first_directory_result.symmetric_difference(&second_directory_result);
-        let common_files_size = common_files.fold(0, |sum, x| sum+x.2);
-        let difference_size = symmetric_difference.fold(0, |sum, x| sum+x.2);
-        println!("{} Megabytes in common\n{} Megabytes difference", common_files_size/(1024*1024), difference_size/(1024*1024));
-    } else {
-        //Wtf? How are we here?
-        println!("How are we here?");
-        println!("Usage: ddh dir_1 {{dir_2}}");
-        return;
-    }
+    let arguments = App::new("Directory Difference hTool")
+                          .version("0.1.0")
+                          .author("Jon Moroney jmoroney@cs.ru.nl")
+                          .about("Compare and contrast directories")
+                          .arg(Arg::with_name("directories")
+                               .short("d")
+                               .long("directories")
+                               .value_name("FILE")
+                               .help("Directories to parse")
+                               .min_values(2)
+                               .required(true)
+                               .takes_value(true)
+                               .index(1))
+                          .arg(Arg::with_name("Blocksize")
+                               .short("b")
+                               .long("blocksize")
+                               .takes_value(true)
+                               .possible_values(&["K", "M", "G"])
+                               .help("Sets the display blocksize to Kilobyte, Megabyte, or Gigabyte. Default is Byte."))
+                          .get_matches();
+
+    let directories = arguments.values_of("directories").unwrap();
+    let display_size = arguments.value_of("Blocksize").unwrap_or("");
+    let display_power = match display_size{"K" => 1, "M" => 2, "G" => 3, _ => 0};
+    let blocksize = match display_size{"K" => "Kilobytes", "M" => "Megabytes", "G" => "Gigabytes", _ => "Bytes"};
+    let display_divisor =  1024u64.pow(display_power);
+    let directory_results: Vec<_> = directories.into_iter().map(|x| recurse_on_dir(Path::new(&x)).unwrap()).collect();
+    let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
+    let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
+    println!("{:?} Total files with {:?} total {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
+    println!("{:?} Common files with {:?} common {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
 }
 
 fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{

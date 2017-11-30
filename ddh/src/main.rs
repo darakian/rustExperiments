@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Read;
+use std::hash::Hash;
 use std::io::BufReader;
 use std::path::Path;
 use std::collections::HashSet;
@@ -10,7 +11,7 @@ use std::hash::Hasher;
 extern crate clap;
 use clap::{Arg, App};
 
-#[derive(Hash, Clone)]
+#[derive(Clone)]
 struct Fileinfo{
     file_name: String,
     file_path: String,
@@ -23,6 +24,12 @@ impl PartialEq for Fileinfo {
     }
 }
 impl Eq for Fileinfo {}
+
+impl Hash for Fileinfo {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.file_hash.hash(state);
+    }
+}
 
 fn main() {
     let arguments = App::new("Directory Difference hTool")

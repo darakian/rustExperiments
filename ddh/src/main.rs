@@ -41,7 +41,7 @@ fn main() {
                                .takes_value(true)
                                .index(1))
                           .arg(Arg::with_name("Blocksize")
-                               .short("bs")
+                               .short("b")
                                .long("blocksize")
                                .case_insensitive(true)
                                .takes_value(true)

@@ -10,6 +10,21 @@ use std::hash::Hasher;
 extern crate clap;
 use clap::{Arg, App};
 
+#[derive(Hash, Clone)]
+struct Fileinfo{
+    file_name: String,
+    file_path: String,
+    file_hash: u64,
+    file_len: u64,
+}
+
+impl PartialEq for Fileinfo {
+    fn eq(&self, other: &Fileinfo) -> bool {
+        self.file_hash == other.file_hash
+    }
+}
+impl Eq for Fileinfo {}
+
 fn main() {
     let arguments = App::new("Directory Difference hTool")
                           .version("0.1.0")
@@ -45,13 +60,13 @@ fn main() {
     let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
     //let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
-    println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
+    println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     //println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
-    println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.2))/display_divisor, blocksize);
+    println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }
 
-fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io::Error>{
-    let mut file_set: HashSet<(String, u64, u64)> = HashSet::new();
+fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<Fileinfo>, io::Error>{
+    let mut file_set: HashSet<Fileinfo> = HashSet::new();
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){
@@ -59,7 +74,7 @@ fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<(String, u64, u64)>, io:
             file_set.extend(additional_files);
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
-            file_set.insert((item.file_name().into_string().unwrap(), hash, item.metadata().unwrap().len()));
+            file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: String::from(item.path().to_str().unwrap()), file_hash: hash, file_len: item.metadata().unwrap().len()});
         }
     }
     return Ok(file_set)

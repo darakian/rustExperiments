@@ -13,8 +13,7 @@ use clap::{Arg, App};
 
 #[derive(Clone)]
 struct Fileinfo{
-    file_name: String,
-    file_path: String,
+    file_path: String, //Includes file name
     file_hash: u64,
     file_len: u64,
 }
@@ -71,6 +70,9 @@ fn main() {
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
+    for item in common_files {
+        println!("{:?}", item.file_path);
+    }
 }
 
 fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<Fileinfo>, io::Error>{
@@ -82,7 +84,7 @@ fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<Fileinfo>, io::Error>{
             file_set.extend(additional_files);
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
-            file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: String::from(item.path().to_str().unwrap()), file_hash: hash, file_len: item.metadata().unwrap().len()});
+            file_set.insert(Fileinfo{file_path: String::from(item.path().to_str().unwrap()), file_hash: hash, file_len: item.metadata().unwrap().len()});
         }
     }
     return Ok(file_set)

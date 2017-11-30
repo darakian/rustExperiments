@@ -17,7 +17,6 @@ struct Fileinfo{
     file_hash: u64,
     file_len: u64,
 }
-
 impl PartialEq for Fileinfo {
     fn eq(&self, other: &Fileinfo) -> bool {
         self.file_hash == other.file_hash
@@ -55,17 +54,15 @@ fn main() {
                                .help("Searches hidden folders. NOT YET IMPLEMENTED. CURRENTLY TRUE"))
                           .get_matches();
 
-    let directories = arguments.values_of("directories").unwrap();
-    let display_size = arguments.value_of("Blocksize").unwrap_or("");
-    let display_power = match display_size{"K" => 1, "M" => 2, "G" => 3, _ => 0};
-    let blocksize = match display_size{"K" => "Kilobytes", "M" => "Megabytes", "G" => "Gigabytes", _ => "Bytes"};
+    let display_power = match arguments.value_of("Blocksize").unwrap_or(""){"K" => 1, "M" => 2, "G" => 3, _ => 0};
+    let blocksize = match arguments.value_of("Blocksize").unwrap_or(""){"K" => "Kilobytes", "M" => "Megabytes", "G" => "Gigabytes", _ => "Bytes"};
     let display_divisor =  1024u64.pow(display_power);
-    let directory_results: Vec<_> = directories.into_iter().map(|x| recurse_on_dir(Path::new(&x)).unwrap()).collect();
+    let directory_results: Vec<_> = arguments.values_of("directories").unwrap().into_iter().map(|x| recurse_on_dir(Path::new(&x)).unwrap()).collect();
     let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
-    //let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
+    let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
-    //println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.2)/display_divisor, blocksize);
+    println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }
 

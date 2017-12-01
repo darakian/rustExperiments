@@ -20,7 +20,7 @@ struct Fileinfo{
 }
 impl PartialEq for Fileinfo {
     fn eq(&self, other: &Fileinfo) -> bool {
-        (self.file_hash==other.file_hash)&&(self.file_path==other.file_path)
+        (self.file_hash==other.file_hash)
     }
 }
 impl Eq for Fileinfo {}

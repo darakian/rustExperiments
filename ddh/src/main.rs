@@ -20,7 +20,7 @@ struct Fileinfo{
 }
 impl PartialEq for Fileinfo {
     fn eq(&self, other: &Fileinfo) -> bool {
-        self.file_hash == other.file_hash
+        (self.file_hash==other.file_hash)&&(self.file_path==other.file_path)
     }
 }
 impl Eq for Fileinfo {}
@@ -67,10 +67,10 @@ fn main() {
     let directory_results: Vec<_> = arguments.values_of("directories").unwrap().into_iter().map(|x| recurse_on_dir(Path::new(&x)).unwrap()).collect();
     let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
     let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
-    let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
+    //let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
-    println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
+    //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
     for item in common_files {
         println!("{}", item.file_name);
     }

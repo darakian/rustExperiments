@@ -3,6 +3,7 @@ use std::io::Read;
 use std::hash::Hash;
 use std::io::BufReader;
 use std::path::Path;
+use std::thread;
 use std::collections::HashSet;
 use std::fs::{self};
 use std::collections::hash_map::DefaultHasher;
@@ -64,7 +65,12 @@ fn main() {
     let display_power = match arguments.value_of("Blocksize").unwrap_or(""){"K" => 1, "M" => 2, "G" => 3, _ => 0};
     let blocksize = match arguments.value_of("Blocksize").unwrap_or(""){"K" => "Kilobytes", "M" => "Megabytes", "G" => "Gigabytes", _ => "Bytes"};
     let display_divisor =  1024u64.pow(display_power);
-    let directory_results: Vec<_> = arguments.values_of("directories").unwrap().into_iter().map(|x| recurse_on_dir(Path::new(&x)).unwrap()).collect();
+    let mut directory_results = Vec::new();
+    for arg in arguments.values_of("directories").unwrap().into_iter(){
+        let mut dir_hashSet = HashSet::new();
+        recurse_on_dir(Path::new(&arg), &mut dir_hashSet);
+        directory_results.push(dir_hashSet);
+    }
     let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
     let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     //let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
@@ -73,19 +79,18 @@ fn main() {
     //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }
 
-fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<Fileinfo>, io::Error>{
-    let mut file_set: HashSet<Fileinfo> = HashSet::new();
+fn recurse_on_dir<'a>(current_dir: &Path, file_set: &'a mut HashSet<Fileinfo>) -> Result<bool, io::Error>{
+    //let mut file_set: HashSet<Fileinfo> = HashSet::new();
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){
-            let additional_files = recurse_on_dir(&item.path())?;
-            file_set.extend(additional_files);
+            recurse_on_dir(&item.path(), file_set)?;
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
             file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: String::from(item.path().to_str().unwrap()), file_hash: hash, file_len: item.metadata().unwrap().len()});
         }
     }
-    return Ok(file_set)
+    Ok(true)
 }
 
 fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
@@ -96,5 +101,5 @@ fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
         hasher.write(&[byte.unwrap()]);
     }
     let hash = hasher.finish();
-    return Ok(hash);
+    Ok(hash)
 }

@@ -71,9 +71,6 @@ fn main() {
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
-    for item in common_files {
-        println!("{}", item.file_name);
-    }
 }
 
 fn recurse_on_dir(current_dir: &Path) -> Result<HashSet<Fileinfo>, io::Error>{

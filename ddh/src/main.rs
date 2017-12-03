@@ -68,25 +68,21 @@ fn main() {
     let mut directory_results = Vec::new();
     //let mut thread_handles = Vec::new();
     for arg in arguments.values_of("directories").unwrap().into_iter(){
-        let mut dir_hash_set = HashSet::new();
-        //thread_handles.push(thread::spawn(||{}));
-        recurse_on_dir(Path::new(&arg), &mut dir_hash_set).unwrap();
-        directory_results.push(dir_hash_set);
+        directory_results.push(recurse_on_dir(Path::new(&arg), HashSet::new()).unwrap());
     }
-    let complete_files = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(&element).cloned().collect());
-    let common_files = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
+    let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
+    let common_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     //let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }
 
-fn recurse_on_dir<'a>(current_dir: &Path, file_set: &'a mut HashSet<Fileinfo>) -> Result<&'a mut HashSet<Fileinfo>, io::Error>{
-    //let mut file_set: HashSet<Fileinfo> = HashSet::new();
+fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result<HashSet<Fileinfo>, io::Error>{
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){
-            recurse_on_dir(&item.path(), file_set)?;
+            file_set = recurse_on_dir(&item.path(), file_set)?;
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
             file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: String::from(item.path().to_str().unwrap()), file_hash: hash, file_len: item.metadata().unwrap().len()});

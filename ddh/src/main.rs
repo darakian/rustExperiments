@@ -14,10 +14,10 @@ use clap::{Arg, App};
 
 #[derive(Clone)]
 struct Fileinfo{
-    file_name: String,
-    file_path: String,
     file_hash: u64,
     file_len: u64,
+    file_name: String,
+    file_path: String,
 }
 impl PartialEq for Fileinfo {
     fn eq(&self, other: &Fileinfo) -> bool {
@@ -34,7 +34,7 @@ impl Hash for Fileinfo {
 
 fn main() {
     let arguments = App::new("Directory Difference hTool")
-                          .version("0.1.0")
+                          .version("0.3.0")
                           .author("Jon Moroney jmoroney@cs.ru.nl")
                           .about("Compare and contrast directories")
                           .arg(Arg::with_name("directories")
@@ -72,11 +72,9 @@ fn main() {
         thread_handles.push(thread::spawn(move|| -> Result<HashSet<Fileinfo>, io::Error> {
             recurse_on_dir(Path::new(&arg_str), HashSet::new())
         }));
-        //directory_results.push(recurse_on_dir(Path::new(&arg), HashSet::new()).unwrap());
     }
     for handle in thread_handles {
         directory_results.push(handle.join().unwrap().unwrap());
-        //println!("{:?}", handle.join());
     }
     let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
     let common_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
@@ -87,7 +85,6 @@ fn main() {
 }
 
 fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result<HashSet<Fileinfo>, io::Error>{
-    //println!("Entering {:?}", current_dir);
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){

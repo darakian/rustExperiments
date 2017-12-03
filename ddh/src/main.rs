@@ -66,9 +66,17 @@ fn main() {
     let blocksize = match arguments.value_of("Blocksize").unwrap_or(""){"K" => "Kilobytes", "M" => "Megabytes", "G" => "Gigabytes", _ => "Bytes"};
     let display_divisor =  1024u64.pow(display_power);
     let mut directory_results = Vec::new();
-    //let mut thread_handles = Vec::new();
+    let mut thread_handles = Vec::new();
     for arg in arguments.values_of("directories").unwrap().into_iter(){
-        directory_results.push(recurse_on_dir(Path::new(&arg), HashSet::new()).unwrap());
+        let arg_str = String::from(arg);
+        thread_handles.push(thread::spawn(move|| -> Result<HashSet<Fileinfo>, io::Error> {
+            recurse_on_dir(Path::new(&arg_str), HashSet::new())
+        }));
+        //directory_results.push(recurse_on_dir(Path::new(&arg), HashSet::new()).unwrap());
+    }
+    for handle in thread_handles {
+        directory_results.push(handle.join().unwrap().unwrap());
+        //println!("{:?}", handle.join());
     }
     let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
     let common_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
@@ -79,6 +87,7 @@ fn main() {
 }
 
 fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result<HashSet<Fileinfo>, io::Error>{
+    //println!("Entering {:?}", current_dir);
     for entry in fs::read_dir(current_dir)? {
         let item = entry?;
         if item.file_type()?.is_dir(){

@@ -119,6 +119,6 @@ fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
             let hash = hasher.finish();
             Ok(hash)
         }
-        Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, file_path);}
+        Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, file_path); Err(e)}
     }
 }

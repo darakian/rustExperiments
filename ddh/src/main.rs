@@ -6,6 +6,7 @@ use std::path::Path;
 use std::thread;
 use std::collections::HashSet;
 use std::path::PathBuf;
+
 use std::fs::{self};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
@@ -17,18 +18,24 @@ use clap::{Arg, App};
 struct Fileinfo{
     file_hash: u64,
     file_len: u64,
-    file_paths: PathBuf,
+    file_paths: Vec<PathBuf>,
 }
-impl PartialEq for Fileinfo {
+impl PartialEq for Fileinfo{
     fn eq(&self, other: &Fileinfo) -> bool {
         (self.file_hash==other.file_hash)
     }
 }
-impl Eq for Fileinfo {}
+impl Eq for Fileinfo{}
 
-impl Hash for Fileinfo {
+impl Hash for Fileinfo{
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.file_hash.hash(state);
+    }
+}
+
+impl Fileinfo{
+    fn add_path(&mut self, new_path: PathBuf){
+        self.file_paths.push(new_path);
     }
 }
 
@@ -79,6 +86,7 @@ fn main() {
     let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
     let common_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
     //let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
+    println!("{:?} Total number of files: {:?} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
@@ -91,7 +99,17 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
             file_set = recurse_on_dir(&item.path(), file_set)?;
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
-            file_set.insert(Fileinfo{file_paths: item.path(), file_hash: hash, file_len: item.metadata().unwrap().len()});
+            match file_set.replace(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()}) {
+                Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},
+                None => {},
+            }
+
+            // let new_file_entry = Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()};
+            // if file_set.contains(&new_file_entry) {
+            //     file_set.get(&new_file_entry).unwrap().add_path(item.path());
+            // } else {
+            //     file_set.insert(new_file_entry);
+            // }
         }
     }
     Ok(file_set)

@@ -25,4 +25,4 @@ OPTIONS:
 
 ARGS:
     <Directories>...    Directories to parse
-    ```
+````

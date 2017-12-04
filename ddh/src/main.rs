@@ -134,3 +134,7 @@ fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
         Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, file_path); Err(e)}
     }
 }
+
+fn union_helper(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
+    return output_hash;
+}

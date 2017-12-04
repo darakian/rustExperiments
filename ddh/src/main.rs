@@ -48,7 +48,7 @@ fn main() {
                                .short("d")
                                .long("directories")
                                .case_insensitive(true)
-                               .value_name("FILE")
+                               .value_name("Directories")
                                .help("Directories to parse")
                                .min_values(1)
                                .required(true)
@@ -59,6 +59,7 @@ fn main() {
                                .long("blocksize")
                                .case_insensitive(true)
                                .takes_value(true)
+                               .max_values(1)
                                .possible_values(&["K", "M", "G"])
                                .help("Sets the display blocksize to Kilobytes, Megabytes or Gigabytes. Default is Bytes."))
                           .arg(Arg::with_name("Hidden")
@@ -66,7 +67,15 @@ fn main() {
                                .long("hidden")
                                .possible_values(&["true", "false"])
                                .case_insensitive(true)
-                               .help("Searches hidden folders. NOT YET IMPLEMENTED. CURRENTLY TRUE"))
+                               .help("Searches hidden folders. NOT YET IMPLEMENTED. CURRENTLY TRUE."))
+                          .arg(Arg::with_name("Print")
+                                .short("p")
+                                .long("print")
+                                .possible_values(&["U", "S"])
+                                .case_insensitive(true)
+                                .takes_value(true)
+                                .help("Print Unique or Shared files.")
+                            )
                           .get_matches();
 
     let display_power = match arguments.value_of("Blocksize").unwrap_or(""){"K" => 1, "M" => 2, "G" => 3, _ => 0};
@@ -88,6 +97,10 @@ fn main() {
     println!("{:?} Total number of files: {:?} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
+    match arguments.value_of("Print").unwrap_or(""){
+        "U" => {println!("Unique Files"); complete_files.iter().for_each(|x| if(x.file_paths.len())==1{println!("{:?}", x.file_paths.iter().for_each(|y| println!("{:?}", y)))});},
+        "S" => {println!("Shared Files"); common_files.iter().for_each(|x| println!("{:?}", x.file_paths[0]));},
+        _ => {}};
     //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }
 
@@ -109,7 +122,6 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
 
 fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
     let mut hasher = DefaultHasher::new();
-    //let file = fs::File::open(file_path)?;
     match fs::File::open(file_path) {
         Ok(f) => {
             let buffer_reader = BufReader::new(f);

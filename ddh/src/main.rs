@@ -99,7 +99,7 @@ fn main() {
     println!("{} Shared files: {} {}", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     match arguments.value_of("Print").unwrap_or(""){
         "U" => {println!("Unique Files"); complete_files.iter().for_each(|x| if(x.file_paths.len())==1{x.file_paths.iter().for_each(|y| println!("{}", y.to_str().unwrap()))});},
-        "S" => {println!("Shared Files"); shared_files.iter().for_each(|x| println!("{}", x.file_paths[0].to_str().unwrap()));},
+        "S" => {println!("Shared Files"); shared_files.iter().for_each(|x| println!("{}", x.file_paths[0].file_name().unwrap().to_str().unwrap()));},
         _ => {}};
     //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }

@@ -17,8 +17,7 @@ use clap::{Arg, App};
 struct Fileinfo{
     file_hash: u64,
     file_len: u64,
-    file_name: String,
-    file_path: PathBuf,
+    file_paths: PathBuf,
 }
 impl PartialEq for Fileinfo {
     fn eq(&self, other: &Fileinfo) -> bool {
@@ -92,7 +91,7 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
             file_set = recurse_on_dir(&item.path(), file_set)?;
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
-            file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: item.path(), file_hash: hash, file_len: item.metadata().unwrap().len()});
+            file_set.insert(Fileinfo{file_paths: item.path(), file_hash: hash, file_len: item.metadata().unwrap().len()});
         }
     }
     Ok(file_set)

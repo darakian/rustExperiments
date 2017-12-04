@@ -5,6 +5,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::thread;
 use std::collections::HashSet;
+use std::path::PathBuf;
 use std::fs::{self};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
@@ -17,7 +18,7 @@ struct Fileinfo{
     file_hash: u64,
     file_len: u64,
     file_name: String,
-    file_path: String,
+    file_path: PathBuf,
 }
 impl PartialEq for Fileinfo {
     fn eq(&self, other: &Fileinfo) -> bool {
@@ -91,7 +92,7 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
             file_set = recurse_on_dir(&item.path(), file_set)?;
         } else if item.file_type()?.is_file(){
             let hash = hash_file(&item.path())?;
-            file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: String::from(item.path().to_str().unwrap()), file_hash: hash, file_len: item.metadata().unwrap().len()});
+            file_set.insert(Fileinfo{file_name:item.file_name().into_string().unwrap(), file_path: item.path(), file_hash: hash, file_len: item.metadata().unwrap().len()});
         }
     }
     Ok(file_set)

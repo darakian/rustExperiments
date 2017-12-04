@@ -94,9 +94,9 @@ fn main() {
     }
     let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
     let shared_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersector, element| intersector.intersection(element).cloned().collect());
-    println!("{:?} Total number of files: {:?} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
-    println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
-    println!("{:?} Shared files: {:?} {}", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
+    println!("{} Total number of files: {} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
+    println!("{} Total unique files: {} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
+    println!("{} Shared files: {} {}", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     match arguments.value_of("Print").unwrap_or(""){
         "U" => {println!("Unique Files"); complete_files.iter().for_each(|x| if(x.file_paths.len())==1{x.file_paths.iter().for_each(|y| println!("{}", y.to_str().unwrap()))});},
         "S" => {println!("Shared Files"); shared_files.iter().for_each(|x| println!("{}", x.file_paths[0].to_str().unwrap()));},

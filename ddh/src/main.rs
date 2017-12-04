@@ -85,7 +85,6 @@ fn main() {
     }
     let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
     let common_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersection_of_elements, element| intersection_of_elements.intersection(element).cloned().collect());
-    //let unique_files = directory_results.iter().fold(complete_files.clone(), |sym_diff, element| sym_diff.symmetric_difference(element).cloned().collect());
     println!("{:?} Total number of files: {:?} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
     println!("{:?} Total unique files: {:?} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{:?} Files in the intersection: {:?} {}", common_files.len(), common_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
@@ -103,13 +102,6 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
                 Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},
                 None => {},
             }
-
-            // let new_file_entry = Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()};
-            // if file_set.contains(&new_file_entry) {
-            //     file_set.get(&new_file_entry).unwrap().add_path(item.path());
-            // } else {
-            //     file_set.insert(new_file_entry);
-            // }
         }
     }
     Ok(file_set)
@@ -117,11 +109,16 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
 
 fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
     let mut hasher = DefaultHasher::new();
-    let file = fs::File::open(file_path)?;
-    let buffer_reader = BufReader::new(file);
-    for byte in buffer_reader.bytes() {
-        hasher.write(&[byte.unwrap()]);
+    //let file = fs::File::open(file_path)?;
+    match fs::File::open(file_path) {
+        Ok(f) => {
+            let buffer_reader = BufReader::new(f);
+            for byte in buffer_reader.bytes() {
+                hasher.write(&[byte.unwrap()]);
+            }
+            let hash = hasher.finish();
+            Ok(hash)
+        }
+        Err(e) => {println!("Error opening {:?}. Skipping.", file_path); Err(e)}
     }
-    let hash = hasher.finish();
-    Ok(hash)
 }

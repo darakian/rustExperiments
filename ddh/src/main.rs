@@ -92,8 +92,8 @@ fn main() {
     for handle in thread_handles {
         directory_results.push(handle.join().unwrap().unwrap());
     }
-    let complete_files: HashSet<Fileinfo> = directory_results.iter().fold(HashSet::new(), |unity, element| unity.union(element).cloned().collect());
-    let shared_files: HashSet<Fileinfo> = directory_results.iter().fold(complete_files.clone(), |intersector, element| intersector.intersection(element).cloned().collect());
+    let complete_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(HashSet::new(), |unifier, element| additive_union(unifier, element));
+    let shared_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(complete_files.clone(), |intersector, element| additive_intersection(intersector, element));
     println!("{} Total number of files: {} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
     println!("{} Total unique files: {} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{} Shared files: {} {}", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
@@ -135,6 +135,22 @@ fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
     }
 }
 
-fn union_helper(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
+fn additive_union(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
+    for new_record in burnable_hash.into_iter(){
+        let new_paths = new_record.file_paths.to_vec();
+        match output_hash.replace(new_record) {
+            Some(mut old_record) => {new_paths.into_iter().for_each(|new_path| old_record.add_path(new_path)); output_hash.replace(old_record);},
+            None => {},
+        }
+    }
+    return output_hash;
+}
+
+fn additive_intersection(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
+    let difference: HashSet<_> = burnable_hash.symmetric_difference(&output_hash).cloned().collect();
+    for unique_record in difference.iter() {
+        output_hash.remove(&unique_record);
+    }
+    output_hash = additive_union(output_hash, burnable_hash);
     return output_hash;
 }

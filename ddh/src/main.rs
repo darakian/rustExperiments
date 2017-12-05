@@ -151,6 +151,6 @@ fn additive_intersection(mut output_hash: HashSet<Fileinfo>, burnable_hash: Hash
     for unique_record in difference.iter() {
         output_hash.remove(&unique_record);
     }
-    output_hash = additive_union(output_hash, burnable_hash);
+    //output_hash = additive_union(output_hash, burnable_hash);
     return output_hash;
 }

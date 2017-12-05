@@ -41,7 +41,7 @@ impl Fileinfo{
 
 fn main() {
     let arguments = App::new("Directory Difference hTool")
-                          .version("0.4.0")
+                          .version("0.5.0")
                           .author("Jon Moroney jmoroney@cs.ru.nl")
                           .about("Compare and contrast directories")
                           .arg(Arg::with_name("directories")

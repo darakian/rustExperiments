@@ -96,7 +96,7 @@ fn main() {
     let shared_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(complete_files.clone(), |intersector, element| additive_intersection(intersector, element));
     println!("{} Total files: {} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
     println!("{} Total unique files: {} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
-    println!("{} Total shared files: {} {}", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
+    println!("{} Total shared files: {} {} ({} instances)", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize, shared_files.iter().fold(0, |sum, x| sum+x.file_paths.len()));
     match arguments.value_of("Print").unwrap_or(""){
         "U" => {println!("Unique Files"); complete_files.iter().for_each(|x| if(x.file_paths.len())==1{println!("{} - {:x}:", x.file_paths[0].to_str().unwrap(), x.file_hash)});},
         "S" => {println!("Shared Files and instances"); shared_files.iter().for_each(|x| {println!("{} instances:", x.file_paths[0].file_name().unwrap().to_str().unwrap());x.file_paths.iter().for_each(|y| println!("{} - {:x}", y.to_str().unwrap(), x.file_hash))});},

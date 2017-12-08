@@ -105,7 +105,6 @@ fn main() {
             println!("Total disk usage {} {}", ((x.file_paths.len() as u64)*x.file_len)/display_divisor, blocksize);
         });},
         _ => {}};
-    //println!("{:?} Files in the symmetric difference: {:?} {}", unique_files.len(), (unique_files.iter().fold(0, |sum, x| sum+x.file_len))/display_divisor, blocksize);
 }
 
 fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result<HashSet<Fileinfo>, io::Error>{

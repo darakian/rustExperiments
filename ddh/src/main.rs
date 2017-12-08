@@ -111,7 +111,7 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
     for entry in fs::read_dir(current_dir)? {
         let item =  match entry{
             Ok(v) => v,
-            Err(_e) => continue
+            Err(e) => {println!("Error encountered reading from {:?} \n {:?}", current_dir, e);continue}
         };
         if item.file_type()?.is_dir(){
             file_set = recurse_on_dir(&item.path(), file_set)?;

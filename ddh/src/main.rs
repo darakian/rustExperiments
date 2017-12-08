@@ -115,7 +115,7 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
         } else if item.file_type()?.is_file(){
             let hash = match hash_file(&item.path()){
                 Some(v) => v,
-                None => 0
+                None => continue
             };
             match file_set.replace(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()}) {
                 Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},

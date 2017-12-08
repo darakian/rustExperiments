@@ -113,7 +113,10 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
         if item.file_type()?.is_dir(){
             file_set = recurse_on_dir(&item.path(), file_set)?;
         } else if item.file_type()?.is_file(){
-            let hash = hash_file(&item.path())?;
+            let hash = match hash_file(&item.path()){
+                Some(v) => v,
+                None => 0
+            };
             match file_set.replace(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()}) {
                 Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},
                 None => {},
@@ -123,15 +126,15 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
     Ok(file_set)
 }
 
-fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
+fn hash_file(file_path: &Path) -> Option<u64>{
     let mut hasher = DefaultHasher::new();
     match fs::File::open(file_path) {
         Ok(f) => {
             let buffer_reader = BufReader::with_capacity(/*std::cmp::min(std::cmp::max(512,(f.metadata()?.len()/8)), 1048576) as usize*/1048576, f);
             buffer_reader.bytes().for_each(|x| hasher.write(&[x.unwrap()]));
-            Ok(hasher.finish())
+            Some(hasher.finish())
         }
-        Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, file_path); Err(e)}
+        Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, file_path); None}
     }
 }
 

@@ -1,4 +1,3 @@
-use std::io;
 use std::io::Read;
 use std::hash::Hash;
 use std::io::BufReader;
@@ -85,12 +84,12 @@ fn main() {
     let mut thread_handles = Vec::new();
     for arg in arguments.values_of("directories").unwrap().into_iter(){
         let arg_str = String::from(arg);
-        thread_handles.push(thread::spawn(move|| -> Result<HashSet<Fileinfo>, io::Error> {
+        thread_handles.push(thread::spawn(move|| -> HashSet<Fileinfo> {
             recurse_on_dir(Path::new(&arg_str), HashSet::new())
         }));
     }
     for handle in thread_handles {
-        directory_results.push(handle.join().unwrap().unwrap());
+        directory_results.push(handle.join().unwrap());
     }
     let complete_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(HashSet::new(), |unifier, element| additive_union(unifier, element));
     let shared_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(complete_files.clone(), |intersector, element| additive_intersection(intersector, element));
@@ -107,15 +106,15 @@ fn main() {
         _ => {}};
 }
 
-fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result<HashSet<Fileinfo>, io::Error>{
-    for entry in fs::read_dir(current_dir)? {
+fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
+    for entry in fs::read_dir(current_dir).unwrap() {
         let item =  match entry{
             Ok(v) => v,
-            Err(e) => {println!("Error encountered reading from {:?} \n {:?}", current_dir, e);continue}
+            Err(e) => {println!("Error encountered reading from {:?} \n {}", current_dir, e);continue}
         };
-        if item.file_type()?.is_dir(){
-            file_set = recurse_on_dir(&item.path(), file_set)?;
-        } else if item.file_type()?.is_file(){
+        if item.file_type().unwrap().is_dir(){
+            file_set = recurse_on_dir(&item.path(), file_set);
+        } else if item.file_type().unwrap().is_file(){
             let hash = match hash_file(&item.path()){
                 Some(v) => v,
                 None => continue
@@ -126,7 +125,7 @@ fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> Result
             }
         }
     }
-    Ok(file_set)
+    file_set
 }
 
 fn hash_file(file_path: &Path) -> Option<u64>{

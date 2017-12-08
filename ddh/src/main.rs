@@ -128,9 +128,6 @@ fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
     match fs::File::open(file_path) {
         Ok(f) => {
             let buffer_reader = BufReader::with_capacity(/*std::cmp::min(std::cmp::max(512,(f.metadata()?.len()/8)), 1048576) as usize*/1048576, f);
-            // for bytes in buffer_reader.bytes() {
-            //     hasher.write(&[bytes.unwrap()]);
-            // }
             buffer_reader.bytes().for_each(|x| hasher.write(&[x.unwrap()]));
             Ok(hasher.finish())
         }

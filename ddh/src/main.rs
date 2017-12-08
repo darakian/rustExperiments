@@ -128,13 +128,11 @@ fn hash_file(file_path: &Path) -> Result<u64, io::Error>{
     let mut hasher = DefaultHasher::new();
     match fs::File::open(file_path) {
         Ok(f) => {
-            //let buffer_reader = BufReader::new(f);
             let buffer_reader = BufReader::with_capacity(std::cmp::min(std::cmp::max(512,(f.metadata()?.len()/8)), 1048576) as usize, f);
-            for byte in buffer_reader.bytes() {
-                hasher.write(&[byte.unwrap()]);
+            for bytes in buffer_reader.bytes() {
+                hasher.write(&[bytes.unwrap()]);
             }
-            let hash = hasher.finish();
-            Ok(hash)
+            Ok(hasher.finish())
         }
         Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, file_path); Err(e)}
     }

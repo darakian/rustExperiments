@@ -100,7 +100,7 @@ fn main() {
         "U" => {println!("Unique Files"); complete_files.iter().for_each(|x| if(x.file_paths.len())==1{println!("{} - {:x}:", x.file_paths[0].to_str().unwrap(), x.file_hash)});},
         "S" => {println!("Shared Files and instances"); shared_files.iter().for_each(|x| {
             println!("{} instances:", x.file_paths[0].file_name().unwrap().to_str().unwrap());
-            x.file_paths.iter().for_each(|y| println!("{} - {:x}", y.to_str().unwrap(), x.file_hash));
+            x.file_paths.iter().for_each(|y| print!("{} - {:x}", y.to_str().unwrap(), x.file_hash));
             println!("Total disk usage {} {}", ((x.file_paths.len() as u64)*x.file_len)/display_divisor, blocksize);
         });},
         _ => {}};

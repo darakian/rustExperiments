@@ -42,7 +42,7 @@ fn main() {
     let arguments = App::new("Directory Difference hTool")
                           .version("0.5.0")
                           .author("Jon Moroney jmoroney@cs.ru.nl")
-                          .about("Compare and contrast directories.\n Example useage: ddh /home/jon/downloads /home/jon/documents -p S \n")
+                          .about("Compare and contrast directories.\nExample invocation: ddh /home/jon/downloads /home/jon/documents -p S")
                           .arg(Arg::with_name("directories")
                                .short("d")
                                .long("directories")

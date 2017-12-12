@@ -101,8 +101,8 @@ fn main() {
         "S" => {println!("Shared Files and instances"); shared_files.iter().for_each(|x| {
             println!("{} instances:", x.file_paths[0].file_name().unwrap().to_str().unwrap());
             x.file_paths.iter().for_each(|y| println!("{} - {:x}", y.to_str().unwrap(), x.file_hash));
-            println!("Total disk usage {} {}", ((x.file_paths.len() as u64)*x.file_len)/display_divisor, blocksize);
-        });},
+            println!("Total disk usage {} {}", ((x.file_paths.len() as u64)*x.file_len)/display_divisor, blocksize)})
+        },
         _ => {}};
 }
 

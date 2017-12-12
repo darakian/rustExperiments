@@ -107,21 +107,24 @@ fn main() {
 }
 
 fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
-    for entry in fs::read_dir(current_dir).unwrap() {
-        let item =  match entry{
-            Ok(v) => v,
-            Err(e) => {println!("Error encountered reading from {:?} \n {}", current_dir, e);continue}
-        };
-        if item.file_type().unwrap().is_dir(){
-            file_set = recurse_on_dir(&item.path(), file_set);
-        } else if item.file_type().unwrap().is_file(){
-            let hash = match hash_file(&item.path()){
-                Some(v) => v,
-                None => continue
+    match fs::read_dir(current_dir) {
+        Err(e) => println!("Reading directory {} has failed. {:?}", current_dir.to_str().unwrap(), e),
+        Ok(paths) => for entry in paths {
+            let item =  match entry{
+                Ok(v) => v,
+                Err(e) => {println!("Error encountered reading from {:?} \n {}", current_dir, e);continue}
             };
-            match file_set.replace(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()}) {
-                Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},
-                None => {},
+            if item.file_type().unwrap().is_dir(){
+                file_set = recurse_on_dir(&item.path(), file_set);
+            } else if item.file_type().unwrap().is_file(){
+                let hash = match hash_file(&item.path()){
+                    Some(v) => v,
+                    None => continue
+                };
+                match file_set.replace(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()}) {
+                    Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},
+                    None => {},
+                }
             }
         }
     }

@@ -92,7 +92,8 @@ fn main() {
         directory_results.push(handle.join().unwrap());
     }
     let complete_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(HashSet::new(), |unifier, element| additive_union(unifier, element));
-    let shared_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(complete_files.clone(), |intersector, element| additive_intersection(intersector, element));
+    let shared_files: HashSet<Fileinfo> = cull_by_length(complete_files.clone(), 2);
+    //let shared_files: HashSet<Fileinfo> = directory_results.to_vec().into_iter().fold(complete_files.clone(), |intersector, element| additive_intersection(intersector, element));
     println!("{} Total files: {} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
     println!("{} Total unique files: {} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{} Total shared files: {} {} ({} instances)", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize, shared_files.iter().fold(0, |sum, x| sum+x.file_paths.len()));
@@ -154,10 +155,11 @@ fn additive_union(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fil
     return output_hash;
 }
 
-fn additive_intersection(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
-    let difference: HashSet<_> = burnable_hash.symmetric_difference(&output_hash).cloned().collect();
-    for unique_record in difference.iter() {
-        output_hash.remove(&unique_record);
+fn cull_by_length(mut output_hash: HashSet<Fileinfo>, len: usize) -> HashSet<Fileinfo>{
+    for entry in output_hash.clone() {
+        if entry.file_paths.len() < len {
+            output_hash.remove(&entry);
+        }
     }
-    return output_hash;
+    output_hash
 }

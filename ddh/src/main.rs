@@ -204,7 +204,3 @@ fn collect(current_dir: &Path, mut file_set: Vec<Fileinfo>) -> Vec<Fileinfo> {
     });
     file_set
 }
-
-fn compress(wild_vec: Vec<Fileinfo>) -> Vec<Fileinfo>{
-    wild_vec
-}

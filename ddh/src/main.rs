@@ -105,13 +105,12 @@ fn main() {
         true
     } else {false});
     let shared_files: Vec<_> = complete_files.iter().filter(|x| x.file_paths.len()>1).collect();
-    let nonshared_files: Vec<_> = complete_files.iter().filter(|x| x.file_paths.len()==1).collect();
+    let unique_files: Vec<_> = complete_files.iter().filter(|x| x.file_paths.len()==1).collect();
     println!("{} Total files: {} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
-    println!("{} Total unique files: {} {}", complete_files.len(), complete_files.iter().fold(0, |sum, x| sum+(x.file_len))/display_divisor, blocksize);
-    println!("{} Total non-shared files: {} {}", nonshared_files.len(), nonshared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
+    println!("{} Total unique files: {} {}", unique_files.len(), unique_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{} Total shared files: {} {} ({} instances)", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize, shared_files.iter().fold(0, |sum, x| sum+x.file_paths.len()));
     match arguments.value_of("Print").unwrap_or(""){
-        "U" => {println!("Non-shared Files"); nonshared_files.iter().for_each(|x| println!("{}", x.file_paths.iter().next().unwrap().file_name().unwrap().to_str().unwrap()))},
+        "U" => {println!("Unique Files"); unique_files.iter().for_each(|x| println!("{}", x.file_paths.iter().next().unwrap().file_name().unwrap().to_str().unwrap()))},
         "S" => {println!("Shared Files and instances"); shared_files.iter().for_each(|x| {
             println!("{} instances:", x.file_paths.iter().next().unwrap().file_name().unwrap().to_str().unwrap());
             x.file_paths.iter().for_each(|y| println!("{} - {:x}", y.to_str().unwrap(), x.file_hash));

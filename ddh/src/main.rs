@@ -133,7 +133,7 @@ fn hash_file(file_path: &Path) -> Option<u64>{
 
 fn collect(current_dir: &Path, mut file_set: Vec<Fileinfo>) -> Vec<Fileinfo> {
     match fs::read_dir(current_dir) {
-        Err(e) => println!("Reading directory {} has failed. {:?}", current_dir.to_str().unwrap(), e),
+        Err(e) => println!("Reading directory {} has failed with error {:?}", current_dir.to_str().unwrap(), e.kind()),
         Ok(paths) => for entry in paths {
             let item =  match entry{
                 Ok(v) => v,

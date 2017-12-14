@@ -46,7 +46,7 @@ impl Hash for Fileinfo{
 
 fn main() {
     let arguments = App::new("Directory Difference hTool")
-                          .version("0.5.0")
+                          .version("0.6.0")
                           .author("Jon Moroney jmoroney@cs.ru.nl")
                           .about("Compare and contrast directories.\nExample invocation: ddh /home/jon/downloads /home/jon/documents -p S")
                           .arg(Arg::with_name("directories")
@@ -103,9 +103,7 @@ fn main() {
         //println!("{:?} Removed\n{:?} Retained", a, b);
         b.file_paths.extend(a.file_paths.drain());
         true
-    } else {
-        false
-    });
+    } else {false});
     let shared_files: Vec<_> = complete_files.iter().filter(|x| x.file_paths.len()>1).collect();
     let unique_files: Vec<_> = complete_files.iter().filter(|x| x.file_paths.len()==1).collect();
     println!("{} Total files: {} {}", complete_files.iter().fold(0, |sum, x| sum+x.file_paths.len()), complete_files.iter().fold(0, |sum, x| sum+(x.file_len*x.file_paths.len() as u64))/display_divisor, blocksize);
@@ -121,31 +119,6 @@ fn main() {
         _ => {}};
 }
 
-// fn recurse_on_dir(current_dir: &Path, mut file_set: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
-//     match fs::read_dir(current_dir) {
-//         Err(e) => println!("Reading directory {} has failed. {:?}", current_dir.to_str().unwrap(), e),
-//         Ok(paths) => for entry in paths {
-//             let item =  match entry{
-//                 Ok(v) => v,
-//                 Err(e) => {println!("Error encountered reading from {:?} \n {}", current_dir, e);continue}
-//             };
-//             if item.file_type().unwrap().is_dir(){
-//                 file_set = recurse_on_dir(&item.path(), file_set);
-//             } else if item.file_type().unwrap().is_file(){
-//                 let hash = match hash_file(&item.path()){
-//                     Some(v) => v,
-//                     None => continue
-//                 };
-//                 match file_set.replace(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()}) {
-//                     Some(mut v) => {v.add_path(item.path()); file_set.replace(v);},
-//                     None => {},
-//                 }
-//             }
-//         }
-//     }
-//     file_set
-// }
-
 fn hash_file(file_path: &Path) -> Option<u64>{
     let mut hasher = DefaultHasher::new();
     match fs::File::open(file_path) {
@@ -158,33 +131,13 @@ fn hash_file(file_path: &Path) -> Option<u64>{
     }
 }
 
-// fn additive_union(mut output_hash: HashSet<Fileinfo>, burnable_hash: HashSet<Fileinfo>) -> HashSet<Fileinfo>{
-//     for new_record in burnable_hash.into_iter(){
-//         let new_paths = new_record.file_paths;
-//         match output_hash.replace(new_record) {
-//             Some(mut old_record) => {new_paths.into_iter().for_each(|new_path| old_record.add_path(new_path)); output_hash.replace(old_record);},
-//             None => {},
-//         }
-//     }
-//     return output_hash;
-// }
-//
-// fn cull_by_length(mut output_hash: HashSet<Fileinfo>, len: usize) -> HashSet<Fileinfo>{
-//     for entry in output_hash.clone() {
-//         if entry.file_paths.len() < len {
-//             output_hash.remove(&entry);
-//         }
-//     }
-//     output_hash
-// }
-
 fn collect(current_dir: &Path, mut file_set: Vec<Fileinfo>) -> Vec<Fileinfo> {
     match fs::read_dir(current_dir) {
         Err(e) => println!("Reading directory {} has failed. {:?}", current_dir.to_str().unwrap(), e),
         Ok(paths) => for entry in paths {
             let item =  match entry{
                 Ok(v) => v,
-                Err(e) => {println!("Error encountered reading from {:?} \n {}", current_dir, e);continue}
+                Err(e) => {println!("Error encountered reading from {:?}\n{:?}", current_dir, e.kind());continue}
             };
             if item.file_type().unwrap().is_dir(){
                 file_set = collect(&item.path(), file_set);
@@ -198,11 +151,5 @@ fn collect(current_dir: &Path, mut file_set: Vec<Fileinfo>) -> Vec<Fileinfo> {
             }
         }
     }
-    // file_set.dedup_by(|a, b| if a==b{
-    //     a.file_paths.extend(b.file_paths.drain());
-    //     true
-    // } else {
-    //     false
-    // });
     file_set
 }

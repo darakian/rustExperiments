@@ -5,7 +5,7 @@ use std::path::Path;
 use std::thread;
 use std::collections::HashSet;
 use std::path::PathBuf;
-
+use std::cmp::Ordering;
 use std::fs::{self};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
@@ -13,7 +13,7 @@ use std::hash::Hasher;
 extern crate clap;
 use clap::{Arg, App};
 
-#[derive(Clone)]
+#[derive(Clone, PartialOrd)]
 struct Fileinfo{
     file_hash: u64,
     file_len: u64,
@@ -26,6 +26,12 @@ impl PartialEq for Fileinfo{
 }
 impl Eq for Fileinfo{}
 
+impl Ord for Fileinfo{
+    fn cmp(&self, other: &Fileinfo) -> Ordering {
+        self.file_len.cmp(&other.file_len)
+    }
+}
+
 impl Hash for Fileinfo{
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.file_hash.hash(state);
@@ -35,6 +41,12 @@ impl Hash for Fileinfo{
 impl Fileinfo{
     fn add_path(&mut self, new_path: PathBuf){
         self.file_paths.push(new_path);
+    }
+
+    fn join_paths(&mut self, other: &mut Fileinfo){
+        for new_path in other.clone().file_paths {
+            self.add_path(new_path);
+        }
     }
 }
 
@@ -162,4 +174,37 @@ fn cull_by_length(mut output_hash: HashSet<Fileinfo>, len: usize) -> HashSet<Fil
         }
     }
     output_hash
+}
+
+fn collect(current_dir: &Path, mut file_set: Vec<Fileinfo>) -> Vec<Fileinfo> {
+    match fs::read_dir(current_dir) {
+        Err(e) => println!("Reading directory {} has failed. {:?}", current_dir.to_str().unwrap(), e),
+        Ok(paths) => for entry in paths {
+            let item =  match entry{
+                Ok(v) => v,
+                Err(e) => {println!("Error encountered reading from {:?} \n {}", current_dir, e);continue}
+            };
+            if item.file_type().unwrap().is_dir(){
+                file_set = collect(&item.path(), file_set);
+            } else if item.file_type().unwrap().is_file(){
+                let hash = match hash_file(&item.path()){
+                    Some(v) => v,
+                    None => continue
+                };
+                file_set.push(Fileinfo{file_paths: vec![item.path()], file_hash: hash, file_len: item.metadata().unwrap().len()});
+            }
+        }
+    }
+    //file_set.sort_unstable();
+    file_set.dedup_by(|a, b| if a==b{
+        a.join_paths(b);
+        true
+    } else {
+        false
+    });
+    file_set
+}
+
+fn compress(wild_vec: Vec<Fileinfo>) -> Vec<Fileinfo>{
+    wild_vec
 }

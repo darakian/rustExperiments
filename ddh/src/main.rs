@@ -76,10 +76,10 @@ fn main() {
                           .arg(Arg::with_name("Print")
                                 .short("p")
                                 .long("print")
-                                .possible_values(&["U", "S"])
+                                .possible_values(&["SI", "S"])
                                 .case_insensitive(true)
                                 .takes_value(true)
-                                .help("Print Unique or Shared files.")
+                                .help("Print Single Instance (SI) or Shared Instance (S) files.")
                             )
                           .get_matches();
 
@@ -111,8 +111,8 @@ fn main() {
     println!("{} Single instance files: {} {}", unique_files.len(), unique_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize);
     println!("{} Shared instance files: {} {} ({} instances)", shared_files.len(), shared_files.iter().fold(0, |sum, x| sum+x.file_len)/display_divisor, blocksize, shared_files.iter().fold(0, |sum, x| sum+x.file_paths.len()));
     match arguments.value_of("Print").unwrap_or(""){
-        "U" => {println!("Unique Files"); unique_files.iter().for_each(|x| println!("{}", x.file_paths.iter().next().unwrap().file_name().unwrap().to_str().unwrap()))},
-        "S" => {println!("Shared Files and instances"); shared_files.iter().for_each(|x| {
+        "SI" => {println!("Single instance files"); unique_files.iter().for_each(|x| println!("{}", x.file_paths.iter().next().unwrap().file_name().unwrap().to_str().unwrap()))},
+        "S" => {println!("Shared instance files and instances"); shared_files.iter().for_each(|x| {
             println!("{} instances:", x.file_paths.iter().next().unwrap().file_name().unwrap().to_str().unwrap());
             x.file_paths.iter().for_each(|y| println!("{} - {:x}", y.to_str().unwrap(), x.file_hash));
             println!("Total disk usage {} {}", ((x.file_paths.len() as u64)*x.file_len)/display_divisor, blocksize)})

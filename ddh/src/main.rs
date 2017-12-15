@@ -124,7 +124,7 @@ fn hash_file(file_path: &Path) -> Option<u64>{
     let mut hasher = DefaultHasher::new();
     match fs::File::open(file_path) {
         Ok(f) => {
-            let buffer_reader = BufReader::with_capacity(/*std::cmp::min(std::cmp::max(512,(f.metadata()?.len()/8)), 1048576) as usize*/1048576, f);
+            let buffer_reader = BufReader::with_capacity(1048576, f);
             buffer_reader.bytes().for_each(|x| hasher.write(&[x.unwrap()]));
             Some(hasher.finish())
         }
@@ -145,7 +145,7 @@ fn collect(current_dir: &Path, mut file_set: Vec<Fileinfo>) -> Vec<Fileinfo> {
             } else if item.file_type().unwrap().is_file(){
                 let hash = match hash_file(&item.path()){
                     Some(v) => v,
-                    None => continue
+                    None => {println!("Error encountered hashing {:?}. Skipping.", item.path());continue}
                 };
                 //println!("{:?}", item.path());
                 file_set.push(Fileinfo{file_paths: vec![item.path()].into_iter().collect(), file_hash: hash, file_len: item.metadata().unwrap().len()});

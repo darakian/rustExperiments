@@ -1,4 +1,5 @@
-# The **D**irectory **D**ifferential **h**Tool
+# DDH is now located here https://github.com/darakian/ddh/tree/master
+## The **D**irectory **D**ifferential **h**Tool
 The H is silent. This tool is called DDH for two very good reasons
 * DDT is a dangerous pesticide
 * I mistyped when I created the project

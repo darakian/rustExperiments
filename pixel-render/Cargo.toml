@@ -5,3 +5,4 @@ authors = ["Jon Moroney <darakian@gmail.com>"]
 
 [dependencies]
 image = "*"
+piston_window = "*"

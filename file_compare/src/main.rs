@@ -95,7 +95,7 @@ fn main() {
 
     for i in 1..100000{
         let mut file = File::create(format!("data/{}Bytes",i*10)).unwrap();
-        write!(file, "Step {}\n", i).unwrap();
+        //write!(file, "Step {}\n", i).unwrap();
         complete_files.par_iter_mut().for_each(|x| hash_and_update(x, i));
         complete_files.par_sort_unstable_by(|a, b| b.file_hash.cmp(&a.file_hash));
         let mut tmp_files = complete_files.clone();
@@ -103,7 +103,7 @@ fn main() {
             b.file_paths.extend(a.file_paths.drain(0..));
             true
         }else{false});
-        tmp_files.iter().for_each(|x| write!(file, "{}: {}\n", x.file_hash, x.file_paths.len()).unwrap());
+        tmp_files.iter().for_each(|x| write!(file, "{} {}\n", x.file_hash, x.file_paths.len()).unwrap());
     }
 
 }

@@ -13,7 +13,7 @@ extern crate rayon;
 use clap::{Arg, App};
 use rayon::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Fileinfo{
     file_hash: u64,
     file_len: u64,
@@ -93,26 +93,27 @@ fn main() {
         x.1
     ).flatten().collect();
 
-    let mut file = File::create("steps.txt").unwrap();
-    for i in 1..10{
-        write!(file, "Step {}", i).unwrap();
+    for i in 1..100000{
+        let mut file = File::create(format!("data/{}Bytes",i*10)).unwrap();
+        write!(file, "Step {}\n", i).unwrap();
         complete_files.par_iter_mut().for_each(|x| hash_and_update(x, i));
         complete_files.par_sort_unstable_by(|a, b| b.file_hash.cmp(&a.file_hash));
-        complete_files.iter().for_each(|x| write!(file, "{}", x.file_hash).unwrap());
-
+        let mut tmp_files = complete_files.clone();
+        tmp_files.dedup_by(|a, b| if a.file_hash==b.file_hash{ //O(n)
+            b.file_paths.extend(a.file_paths.drain(0..));
+            true
+        }else{false});
+        tmp_files.iter().for_each(|x| write!(file, "{}: {}\n", x.file_hash, x.file_paths.len()).unwrap());
     }
 
 }
 
 fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
-    if input.hashed==true{
-        return
-    }
     let mut hasher = DefaultHasher::new();
     match fs::File::open(input.file_paths.iter().next().expect("Error opening file for hashing")) {
         Ok(f) => {
             let mut buffer_reader = BufReader::new(f);
-            let mut hash_buffer = [0;100];
+            let mut hash_buffer = [0;10];
             for _i in 1..length {
                 match buffer_reader.read(&mut hash_buffer) {
                     Ok(n) if n>0 => hasher.write(&hash_buffer[0..n]),
@@ -122,7 +123,6 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
                 }
             }
             input.file_hash=hasher.finish();
-            input.hashed=true;
         }
         Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, input.file_paths.iter().next().expect("Error opening file for hashing"))}
     }

@@ -93,8 +93,8 @@ fn main() {
         x.1
     ).flatten().collect();
 
-    for i in 1..100000{
-        let mut file = File::create(format!("data/{}Bytes",i*10)).unwrap();
+    for i in 1..1000{
+        let mut file = File::create(format!("data/{:05}",i*10)).unwrap();
         //write!(file, "Step {}\n", i).unwrap();
         complete_files.par_iter_mut().for_each(|x| hash_and_update(x, i));
         complete_files.par_sort_unstable_by(|a, b| b.file_hash.cmp(&a.file_hash));
@@ -113,7 +113,7 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
     match fs::File::open(input.file_paths.iter().next().expect("Error opening file for hashing")) {
         Ok(f) => {
             let mut buffer_reader = BufReader::new(f);
-            let mut hash_buffer = [0;10];
+            let mut hash_buffer = [0;100];
             for _i in 1..length {
                 match buffer_reader.read(&mut hash_buffer) {
                     Ok(n) if n>0 => hasher.write(&hash_buffer[0..n]),

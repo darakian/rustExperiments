@@ -1,7 +1,6 @@
 #!/bin/bash
-for i in `seq 10 10 1000000`
+for i in $(ls data)
 do
-  echo "${i}Bytes"
-  gnuplot -e "datafile='data/${i}Bytes'; outputname='plots/${i}Bytes.png'" plotter.plg
+  gnuplot -e "datafile='data/${i}'; outputfile='plots/${i}Bytes.png'" plotter.plg
 done
 convert -loop 0 -delay 125 plots/*.png out.gif

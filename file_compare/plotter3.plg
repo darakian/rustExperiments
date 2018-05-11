@@ -1,0 +1,10 @@
+set terminal png
+set title bytes "Files"
+set key off
+set yrange [0:]
+set xrange [0:]
+set ylabel "Size"
+set logscale y
+set xlabel "Count"
+set output outputfile
+plot datafile

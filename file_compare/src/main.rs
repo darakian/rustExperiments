@@ -89,12 +89,13 @@ fn main() {
         }
     }
 
+    let mut sizes = File::create(format!("filesizes")).unwrap();
     let mut complete_files: Vec<Fileinfo> = files_of_lengths.into_par_iter().map(|x|
         x.1
     ).flatten().collect();
 
     for i in 1..4096{
-        let mut file = File::create(format!("data/{:05}",i)).unwrap();
+        let mut hashesfile = File::create(format!("data/{:05}",i)).unwrap();
         //write!(file, "Step {}\n", i).unwrap();
         complete_files.par_iter_mut().for_each(|x| hash_and_update(x, i));
         complete_files.par_sort_unstable_by(|a, b| b.file_hash.cmp(&a.file_hash));
@@ -103,9 +104,9 @@ fn main() {
             b.file_paths.extend(a.file_paths.drain(0..));
             true
         }else{false});
-        tmp_files.iter().for_each(|x| write!(file, "{} {}\n", x.file_hash, x.file_paths.len()).unwrap());
+        tmp_files.iter().for_each(|x| write!(hashesfile, "{} {}\n", x.file_hash, x.file_paths.len()).unwrap());
+        tmp_files.iter().for_each(|x| write!(sizes, "{}\n", x.file_len).unwrap());
     }
-
 }
 
 fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){

@@ -8,6 +8,7 @@ do
   wc -l data/${i} | sed 's/data\//''/g' >> consolidated.txt
 done
 gnuplot -e "datafile='consolidated.txt'; outputfile='histogram.png';" plotter2.plg
+gnuplot -e "datafile='filesizes'; outputfile='sizes.png';" plotter3.plg
 convert -loop 0 -delay 100 plots/*.png unique.gif
 
 #cleanup

@@ -93,6 +93,7 @@ fn main() {
     let mut complete_files: Vec<Fileinfo> = files_of_lengths.into_par_iter().map(|x|
         x.1
     ).flatten().collect();
+    complete_files.iter().for_each(|x| write!(sizes, "{}\n", x.file_len).unwrap());
 
     for i in 1..4096{
         let mut hashesfile = File::create(format!("data/{:05}",i)).unwrap();
@@ -105,7 +106,6 @@ fn main() {
             true
         }else{false});
         tmp_files.iter().for_each(|x| write!(hashesfile, "{} {}\n", x.file_hash, x.file_paths.len()).unwrap());
-        tmp_files.iter().for_each(|x| write!(sizes, "{}\n", x.file_len).unwrap());
     }
 }
 

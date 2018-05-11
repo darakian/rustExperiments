@@ -10,7 +10,7 @@ done
 nl filesizes > numbered_filesizes
 gnuplot -e "datafile='consolidated.txt'; outputfile='histogram.png';" plotter2.plg
 gnuplot -e "datafile='numbered_filesizes'; outputfile='sizes.png';" plotter3.plg
-convert -loop 0 -delay 100 plots/*.png unique.gif
+nice convert -loop 0 -delay 100 plots/*.png -fuzz 10% -layers Optimize unique.gif
 
 #cleanup
 rm consolidated.txt

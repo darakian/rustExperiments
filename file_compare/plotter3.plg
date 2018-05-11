@@ -5,6 +5,6 @@ set yrange [1:]
 set xrange [0:]
 set ylabel "Size"
 set logscale y 2
-set xlabel "Count"
+set xlabel "File"
 set output outputfile
 plot datafile using 1:2

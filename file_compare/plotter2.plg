@@ -1,0 +1,8 @@
+set terminal png
+set key off
+set yrange [0:]
+set xrange [0:]
+set ylabel "Unique Hashes"
+set xlabel "Bytes Hashed"
+set output outputfile
+plot datafile using 2:1 with lines

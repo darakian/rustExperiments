@@ -3,9 +3,6 @@ use quickcheck::{TestResult, quickcheck};
 
 
 fn main() {
-    let the_vec = vec![5,7,1,22,10,100, 0, 0, 0, -999];
-    println!("{}", max_product_naive(the_vec.clone()));
-    println!("{}", max_product_better(the_vec.clone()));
 
         fn prop(xs: Vec<i64>) -> TestResult {
             if xs.len() == 0 {

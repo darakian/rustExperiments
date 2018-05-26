@@ -1,10 +1,12 @@
 use std::time::{Duration, Instant};
-
+use std::thread::sleep;
 
 fn main() {
-    let sixteen = Duration::new(0, 16666666);
+    let sixteen = Duration::from_millis(50);
     let start_time = Instant::now();
-    while Instant::now().duration_since(start_time) < Duration::new(1,0){
+    while Instant::now().duration_since(start_time) <= sixteen{
             println!("Hello, world!");
+            sleep(Duration::from_millis(1));
+
     }
 }

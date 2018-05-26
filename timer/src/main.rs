@@ -1,12 +1,24 @@
 use std::time::{Duration, Instant};
-use std::thread::sleep;
+use std::thread;
+use std::sync::mpsc::channel;
 
 fn main() {
-    let sixteen = Duration::from_millis(50);
     let start_time = Instant::now();
-    while Instant::now().duration_since(start_time) <= sixteen{
-            println!("Hello, world!");
-            sleep(Duration::from_millis(1));
-
+    let (tx, rx) = channel();
+    // Threaded one millisecond timer
+    thread::spawn(move || {
+    loop {
+        thread::sleep(Duration::from_millis(1));
+        tx.send("tick").unwrap();
     }
+    });
+
+
+
+
+    for entry in rx.iter() {
+        println!("{:?} :: {:?}", Instant::now(), entry);
+        if start_time.elapsed() >= Duration::from_secs(3) {break}
+    }
+
 }

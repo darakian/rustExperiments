@@ -1,0 +1,7 @@
+[package]
+name = "short_bus"
+version = "0.1.0"
+authors = ["Jon Moroney <darakian@gmail.com>"]
+
+[dependencies]
+crossbeam-channel = "0.1"

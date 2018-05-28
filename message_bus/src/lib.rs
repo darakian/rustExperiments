@@ -8,13 +8,6 @@ mod tests {
         mb.publish(Message::new(1,2));
         mb.publish(Message::new(1,2));
         mb.publish(Message::new(1,2));
-        assert_ne!(mb.process(), mb.process());
-        mb.process();
-    }
-
-    #[test]
-    fn print() {
-        println!("Yes?");
     }
 }
 
@@ -28,69 +21,72 @@ use std::sync::Mutex;
 use std::collections::hash_map::{HashMap, Entry};
 
     pub struct Message{
-        to_id: u32,
-        from_id: u32
+        to_id: String,
+        from_id: String
     }
 
     impl Message {
-        pub fn new(to: u32, from: u32) -> Self{
+        pub fn new(to: String, from: String) -> Self{
             Message{to_id: to, from_id: from}
         }
     }
 
     pub struct Messagebus{
-        bus_id: u64,
-        m_buffer: Mutex<Vec<Message>>,
-        subscribers:  Mutex<HashMap<u32, (crossbeam_channel::Sender<Message>, crossbeam_channel::Receiver<Message>)>>
+        bus_id: String,
+        global_recv: crossbeam_channel::Receiver<Message>,
+        global_send: crossbeam_channel::Sender<Message>,
+        subscribers:  Mutex<HashMap<String, (crossbeam_channel::Sender<Message>)>>
     }
 
     impl Messagebus{
-        pub fn new(bus_id: u64) -> Self{
-            Messagebus{bus_id: bus_id, m_buffer: Mutex::new(Vec::new()), subscribers: Mutex::new(HashMap::new())}
+        pub fn new(bus_id: String) -> Self{
+            let (send, receive) = unbounded::<Message>();
+            let mut bus = Messagebus{bus_id: bus_id, global_recv: receive, global_send: send, subscribers: Mutex::new(HashMap::new())};
+            let (bus_self_tx, bus_self_rx) = bus.subscribe("bus".to_string()).unwrap();
+
+            match bus.subscribers.get_mut(){
+                Ok(exclusive_buffer) => {
+                    match exclusive_buffer.entry("bus".to_string()) {
+                        Entry::Vacant(eb) => {eb.insert(bus_self_tx);},
+                        Entry::Occupied(mut e) => {println!("{:?}", e);}
+                        }
+                },
+                Err(e) => {println!("{:?}", e);}
+            }
+            bus
         }
 
-        pub fn subscribe(&mut self, sub_tag: u32) -> Result<(crossbeam_channel::Sender<Message>, crossbeam_channel::Receiver<Message>), &str>{
+        pub fn subscribe(&mut self, sub_tag: String) -> Result<(crossbeam_channel::Sender<Message>, crossbeam_channel::Receiver<Message>), &str>{
             let (send, receive) = unbounded::<Message>();
             match self.subscribers.get_mut(){
                 Ok(exclusive_buffer) => {
                     match exclusive_buffer.entry(sub_tag) {
-                        Entry::Vacant(eb) => {eb.insert((send.clone(), receive.clone()));},
+                        Entry::Vacant(eb) => {eb.insert(send.clone());},
                         Entry::Occupied(mut e) => {return Err("Sub_ID in use");}
                         }
                 },
                 Err(e) => {println!("{:?}", e);return Err("Poison error")}
             }
-            Ok((send, receive))
+            Ok((self.global_send.clone(), receive))
         }
 
-        pub fn process(&mut self) -> usize {
-            let mut r_value = 0;
-            match self.m_buffer.get_mut(){
-                Ok(mut exclusive_messages) => {
-                    r_value = exclusive_messages.len();
-                    match self.subscribers.get_mut(){
-                            Ok(exclusive_subscribers) => {
-                                for entry in exclusive_messages.drain(..){
-                                    //let msg = exclusive_messages.remove(entry.0);
-                                    match exclusive_subscribers.get(&entry.to_id){
-                                        Some(s) => {s.0.send(entry).unwrap()},
-                                        None => {}
-                                    }
+        pub fn do_messaging(&mut self) {
+            loop {
+                let msg = self.global_recv.recv().unwrap();
+                match self.subscribers.get_mut(){
+                        Ok(exclusive_subscribers) => {
+                                match exclusive_subscribers.get(&msg.to_id){
+                                    Some(s) => {s.send(msg).unwrap()},
+                                    None => {}
                                 }
-                            },
-                            Err (e) => {}
-                    }
-                },
-                Err(e) => {}
+                        },
+                        Err (e) => {}
+                }
             }
-            r_value
-        }
+    }
 
         pub fn publish(&mut self, m: Message) -> (){
-            match self.m_buffer.get_mut(){
-                Ok(exclusive_buffer) => exclusive_buffer.push(m),
-                Err(e) => {}
-            }
+            self.global_send.send(m).unwrap();
         }
     }
 }

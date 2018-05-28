@@ -1,8 +1,20 @@
 #[cfg(test)]
 mod tests {
+    use message_bus::{Message, Messagebus};
+
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        let mut mb = Messagebus::new(1);
+        mb.publish(Message::new(1,2));
+        mb.publish(Message::new(1,2));
+        mb.publish(Message::new(1,2));
+        assert_ne!(mb.process(), mb.process());
+        mb.process();
+    }
+
+    #[test]
+    fn print() {
+        println!("Yes?");
     }
 }
 
@@ -15,19 +27,25 @@ use self::crossbeam_channel::unbounded;
 use std::sync::Mutex;
 use std::collections::hash_map::{HashMap, Entry};
 
-    struct Message{
+    pub struct Message{
         to_id: u32,
         from_id: u32
     }
 
-    struct Messagebus{
+    impl Message {
+        pub fn new(to: u32, from: u32) -> Self{
+            Message{to_id: to, from_id: from}
+        }
+    }
+
+    pub struct Messagebus{
         bus_id: u64,
         m_buffer: Mutex<Vec<Message>>,
         subscribers:  Mutex<HashMap<u32, (crossbeam_channel::Sender<Message>, crossbeam_channel::Receiver<Message>)>>
     }
 
     impl Messagebus{
-        fn new(bus_id: u64) -> Self{
+        pub fn new(bus_id: u64) -> Self{
             Messagebus{bus_id: bus_id, m_buffer: Mutex::new(Vec::new()), subscribers: Mutex::new(HashMap::new())}
         }
 
@@ -45,15 +63,27 @@ use std::collections::hash_map::{HashMap, Entry};
             Ok((send, receive))
         }
 
-        fn process(&mut self) {
+        pub fn process(&mut self) -> usize {
+            let mut r_value = 0;
             match self.m_buffer.get_mut(){
-                Ok(exclusive_buffer) => {
-                    for message in exclusive_buffer.iter(){
+                Ok(mut exclusive_messages) => {
+                    r_value = exclusive_messages.len();
+                    match self.subscribers.get_mut(){
+                            Ok(exclusive_subscribers) => {
+                                for entry in exclusive_messages.drain(..){
+                                    //let msg = exclusive_messages.remove(entry.0);
+                                    match exclusive_subscribers.get(&entry.to_id){
+                                        Some(s) => {s.0.send(entry).unwrap()},
+                                        None => {}
+                                    }
+                                }
+                            },
+                            Err (e) => {}
                     }
-                    exclusive_buffer.truncate(0)
                 },
                 Err(e) => {}
             }
+            r_value
         }
 
         pub fn publish(&mut self, m: Message) -> (){

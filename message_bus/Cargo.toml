@@ -1,5 +1,5 @@
 [package]
-name = "short_bus"
+name = "message_bus"
 version = "0.1.0"
 authors = ["Jon Moroney <darakian@gmail.com>"]
 

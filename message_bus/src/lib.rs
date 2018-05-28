@@ -4,10 +4,14 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut mb = Messagebus::new(1);
-        mb.publish(Message::new(1,2));
-        mb.publish(Message::new(1,2));
-        mb.publish(Message::new(1,2));
+        let mut mb = Messagebus::new("bus");
+        mb.publish(Message::new("1","2"));
+        mb.publish(Message::new("2","2"));
+        mb.publish(Message::new("3","2"));
+        assert_eq!(mb.check_channel_len(), 3);
+        mb.publish(Message::new("bus","2"));
+        
+        mb.do_messaging();
     }
 }
 
@@ -20,14 +24,15 @@ use self::crossbeam_channel::unbounded;
 use std::sync::Mutex;
 use std::collections::hash_map::{HashMap, Entry};
 
+    #[derive(Debug)]
     pub struct Message{
         to_id: String,
         from_id: String
     }
 
     impl Message {
-        pub fn new(to: String, from: String) -> Self{
-            Message{to_id: to, from_id: from}
+        pub fn new(to: &str, from: &str) -> Self{
+            Message{to_id: to.to_string(), from_id: from.to_string()}
         }
     }
 
@@ -39,20 +44,11 @@ use std::collections::hash_map::{HashMap, Entry};
     }
 
     impl Messagebus{
-        pub fn new(bus_id: String) -> Self{
+        pub fn new(bus_id: &str) -> Self{
             let (send, receive) = unbounded::<Message>();
-            let mut bus = Messagebus{bus_id: bus_id, global_recv: receive, global_send: send, subscribers: Mutex::new(HashMap::new())};
-            let (bus_self_tx, bus_self_rx) = bus.subscribe("bus".to_string()).unwrap();
-
-            match bus.subscribers.get_mut(){
-                Ok(exclusive_buffer) => {
-                    match exclusive_buffer.entry("bus".to_string()) {
-                        Entry::Vacant(eb) => {eb.insert(bus_self_tx);},
-                        Entry::Occupied(mut e) => {println!("{:?}", e);}
-                        }
-                },
-                Err(e) => {println!("{:?}", e);}
-            }
+            let working_bus_id = bus_id.clone();
+            let mut bus = Messagebus{bus_id: bus_id.to_string(), global_recv: receive, global_send: send, subscribers: Mutex::new(HashMap::new())};
+            let (bus_self_tx, bus_self_rx) = bus.subscribe(working_bus_id.to_string()).unwrap();
             bus
         }
 
@@ -73,11 +69,16 @@ use std::collections::hash_map::{HashMap, Entry};
         pub fn do_messaging(&mut self) {
             loop {
                 let msg = self.global_recv.recv().unwrap();
+                println!("{:?}", msg);
+                if msg.to_id == self.bus_id{
+                    //handle message for self
+                    return
+                }
                 match self.subscribers.get_mut(){
                         Ok(exclusive_subscribers) => {
                                 match exclusive_subscribers.get(&msg.to_id){
                                     Some(s) => {s.send(msg).unwrap()},
-                                    None => {}
+                                    None => {drop(msg)}
                                 }
                         },
                         Err (e) => {}
@@ -87,6 +88,10 @@ use std::collections::hash_map::{HashMap, Entry};
 
         pub fn publish(&mut self, m: Message) -> (){
             self.global_send.send(m).unwrap();
+        }
+
+        pub fn check_channel_len(&self) -> usize{
+            self.global_recv.len()
         }
     }
 }

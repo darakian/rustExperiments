@@ -12,6 +12,8 @@ mod message_bus {
 extern crate crossbeam_channel;
 use self::crossbeam_channel::unbounded;
 
+use std::sync::Mutex;
+
     struct Message{
         to_id: u32,
         from_id: u32
@@ -19,13 +21,13 @@ use self::crossbeam_channel::unbounded;
 
     struct Messagebus{
         bus_id: u64,
-        m_buffer: Vec<Message>,
+        m_buffer: Mutex<Vec<Message>>,
         subscribers: Vec<(u32, crossbeam_channel::Sender<Message>, crossbeam_channel::Receiver<Message>)>
     }
 
     impl Messagebus{
         fn new(bus_id: u64) -> Self{
-            Messagebus{bus_id: bus_id, m_buffer: Vec::new(), subscribers: Vec::new()}
+            Messagebus{bus_id: bus_id, m_buffer: Mutex::new(Vec::new()), subscribers: Vec::new()}
         }
 
         pub fn subscribe(&mut self, sub_tag: u32) -> (crossbeam_channel::Sender<Message>, crossbeam_channel::Receiver<Message>){
@@ -35,13 +37,24 @@ use self::crossbeam_channel::unbounded;
         }
 
         fn process(&mut self) {
-            for message in self.m_buffer.iter(){
+            match self.m_buffer.get_mut(){
+                Ok(exclusive_buffer) => {
+                    for message in exclusive_buffer.iter(){
+                    }
+                    exclusive_buffer.truncate(0)
+                },
+                Err(e) => {}
             }
-            self.m_buffer.truncate(0)
+
         }
 
         pub fn publish(&mut self, m: Message) -> (){
-            self.m_buffer.push(m)
+            match self.m_buffer.get_mut(){
+                Ok(exclusive_buffer) => {
+                    exclusive_buffer.push(m)
+                },
+                Err(e) => {}
+            }
         }
     }
 }

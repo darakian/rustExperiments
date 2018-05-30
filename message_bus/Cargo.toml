@@ -1,5 +1,5 @@
 [package]
-name = "message_bus"
+name = "messaging_module"
 version = "0.1.0"
 authors = ["Jon Moroney <darakian@gmail.com>"]
 

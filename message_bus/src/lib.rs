@@ -34,9 +34,10 @@ mod tests {
         mb.publish(Message::new("bus",2));
 
         let (send, recv) = mb.join(7).unwrap();
-        mb.subscribe("2", 7).unwrap();
+        mb.subscribe("3", 7).unwrap();
         mb.do_messaging();
-        for element in recv.recv().iter(){
+        println!("Recv.len = {:?}", recv.len());
+        for element in recv.try_iter(){
             println!(">>> {:?}", element);
         }
 
@@ -129,6 +130,7 @@ use std::collections::hash_map::{HashMap, Entry};
                                 match exclusive_feeds.get(&msg.publish_tag){
                                     Some(feed_subscribers) => {
                                         feed_subscribers.iter().for_each(|x| {
+                                            println!("Sending {:?}", msg);
                                         x.send(msg.clone()).unwrap()})},
                                     None => {drop(msg)}
                                 }

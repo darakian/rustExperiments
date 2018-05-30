@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use message_bus::{Message, Messagebus};
+    use messaging_module::{Message, Omnibus};
 
     #[test]
     fn it_works() {
-        let mut mb = Messagebus::new("bus");
+        let mut mb = Omnibus::new("bus");
         mb.publish(Message::new("1",2));
         mb.publish(Message::new("2",2));
         mb.publish(Message::new("3",2));
@@ -16,7 +16,7 @@ mod tests {
 
 
 
-mod message_bus {
+mod messaging_module {
 extern crate crossbeam_channel;
 use self::crossbeam_channel::unbounded;
 
@@ -35,7 +35,7 @@ use std::collections::hash_map::{HashMap, Entry};
         }
     }
 
-    pub struct Messagebus{
+    pub struct Omnibus{
         bus_id: String,
         global_recv: crossbeam_channel::Receiver<Message>,
         global_send: crossbeam_channel::Sender<Message>,
@@ -43,10 +43,10 @@ use std::collections::hash_map::{HashMap, Entry};
         feeds: Mutex<HashMap<String, Vec<crossbeam_channel::Sender<Message>>>>
     }
 
-    impl Messagebus{
+    impl Omnibus{
         pub fn new(bus_id: &str) -> Self{
             let (send, receive) = unbounded::<Message>();
-            let mut bus = Messagebus{bus_id: bus_id.to_string(), global_recv: receive, global_send: send, subscribers: Mutex::new(HashMap::new()), feeds: Mutex::new(HashMap::new())};
+            let mut bus = Omnibus{bus_id: bus_id.to_string(), global_recv: receive, global_send: send, subscribers: Mutex::new(HashMap::new()), feeds: Mutex::new(HashMap::new())};
             let (bus_self_tx, bus_self_rx) = bus.join(0).unwrap();
             bus
         }

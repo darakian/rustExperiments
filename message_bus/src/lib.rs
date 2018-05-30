@@ -120,20 +120,15 @@ use std::collections::hash_map::{HashMap, Entry};
         pub fn do_messaging(&mut self) {
             loop {
                 let msg = self.global_recv.recv().unwrap();
-                //rintln!("global_recv.len = {:?}", self.global_recv.len());
                 if msg.publish_tag == self.bus_id{
                     //handle message for self
                     return
                 }
                 match self.feeds.get_mut(){
                         Ok(exclusive_feeds) => {
-                            //println!("Here: msg.publish_tag = {:?}", msg.publish_tag);
-                            //println!("exclusive_feeds = {:?}", exclusive_feeds);
                                 match exclusive_feeds.get(&msg.publish_tag){
                                     Some(feed_subscribers) => {
-                                        //println!("feed = {:?}", feed_subscribers);
                                         feed_subscribers.iter().for_each(|x| {
-                                        //println!("Sending {:?}", msg);
                                         x.send(msg.clone()).unwrap()})},
                                     None => {drop(msg)}
                                 }

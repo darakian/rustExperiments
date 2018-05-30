@@ -40,7 +40,6 @@ mod tests {
         for element in recv.try_iter(){
             println!(">>> {:?}", element);
         }
-
     }
 }
 
@@ -86,7 +85,7 @@ use std::collections::hash_map::{HashMap, Entry};
             match self.subscribers.get_mut(){
                 Ok(exclusive_subscribers) => {
                     match exclusive_subscribers.entry(component_id) {
-                        Entry::Vacant(eb) => {eb.insert(send.clone());},
+                        Entry::Vacant(es) => {es.insert(send.clone());},
                         Entry::Occupied(mut e) => {return Err("Sub_ID in use");}
                         }
                 },
@@ -96,17 +95,14 @@ use std::collections::hash_map::{HashMap, Entry};
         }
 
         pub fn subscribe(&mut self, sub_tag: &str, component_id: u64) -> Result<(), &str>{
-            println!("Here for {:?} {:?}", sub_tag, component_id);
             match self.subscribers.get_mut(){
                 Ok(exclusive_subscribers) => {
-                    println!("exclusive_subscribers = {:?}", exclusive_subscribers);
                     match self.feeds.get_mut(){
                         Ok(exclusive_feeds) => {
-                            println!("exclusive_feeds = {:?}", exclusive_feeds);
                             exclusive_feeds.entry(sub_tag.to_string())
                             .and_modify(|vec| {
-                                if vec.contains(exclusive_subscribers.get(&component_id).unwrap()) {println!("Returning... ?");}
-                                else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); println!("Here");}
+                                if vec.contains(exclusive_subscribers.get(&component_id).unwrap()) {/*Should handle this case. TODO*/}
+                                else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone());}
                              })
                             .or_insert({let mut vec = Vec::new(); vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); vec});
                         },

@@ -1,16 +1,45 @@
 #[cfg(test)]
 mod tests {
     use messaging_module::{Message, Omnibus};
+    use std::thread;
 
     #[test]
     fn it_works() {
         let mut mb = Omnibus::new("bus");
         mb.publish(Message::new("1",2));
-        mb.publish(Message::new("2",2));
-        mb.publish(Message::new("3",2));
+        mb.publish(Message::new("1",2));
+        mb.publish(Message::new("1",2));
         assert_eq!(mb.check_channel_len(), 3);
+        let h1 = thread::spawn(move || {
+            mb.publish(Message::new("2",2));
+            mb.publish(Message::new("2",2));
+            mb.publish(Message::new("2",2));
+            mb
+        });
+        let mut mb = h1.join().unwrap();
+        let h2 = thread::spawn(move || {
+            mb.publish(Message::new("3",2));
+            mb.publish(Message::new("3",2));
+            mb.publish(Message::new("3",2));
+            mb
+        });
+        let mut mb = h2.join().unwrap();
+        let h3 = thread::spawn(move || {
+            mb.publish(Message::new("4",2));
+            mb.publish(Message::new("4",2));
+            mb.publish(Message::new("4",2));
+            mb
+        });
+        let mut mb = h3.join().unwrap();
         mb.publish(Message::new("bus",2));
+
+        let (send, recv) = mb.join(7).unwrap();
+        mb.subscribe("2", 7).unwrap();
         mb.do_messaging();
+        for element in recv.recv().iter(){
+            println!(">>> {:?}", element);
+        }
+
     }
 }
 
@@ -65,18 +94,48 @@ use std::collections::hash_map::{HashMap, Entry};
             Ok((self.global_send.clone(), receive))
         }
 
-        pub fn subscribe(&mut self, component_id: u64, sub_tag: String) -> Result<(), &str>{
+        pub fn subscribe(&mut self, sub_tag: &str, component_id: u64) -> Result<(), &str>{
+            println!("Here for {:?} {:?}", sub_tag, component_id);
             match self.subscribers.get_mut(){
                 Ok(exclusive_subscribers) => {
+                    println!("exclusive_subscribers = {:?}", exclusive_subscribers);
                     match self.feeds.get_mut(){
                         Ok(exclusive_feeds) => {
-                            match exclusive_feeds.get_mut(&sub_tag) {
-                                Some(vec) => {
-                                    if vec.contains(exclusive_subscribers.get(&component_id).unwrap()) {return Ok(())}
-                                    else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone())}
-                                },
-                                None => {}
-                                }
+                            println!("exclusive_feeds = {:?}", exclusive_feeds);
+                            exclusive_feeds.entry(sub_tag.to_string())
+                            .and_modify(|vec| {
+                                if vec.contains(exclusive_subscribers.get(&component_id).unwrap()) {println!("Returning... ?");}
+                                else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); println!("Here");}
+                             })
+                            .or_insert({let mut vec = Vec::new(); vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); vec});
+
+
+
+                            // match exclusive_feeds.entry(&sub_tag.to_string()) {
+                            //
+                            //
+                            //
+                            //
+                            //     Entry::Vacant(exclusive_feeds) => {exclusive_feeds.insert(Vec::new().push(exclusive_subscribers.get(&component_id).unwrap().clone()));},
+                            //     Entry::Occupied(mut entry) => {
+                            //         let vec = entry.unwrap();
+                            //         println!("Here {:?}", &sub_tag.to_string());
+                            //         if vec.contains(exclusive_subscribers.get(&component_id).unwrap()) {println!("Returning... ?");return Ok(())}
+                            //         else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); println!("Here");}
+                            //     }
+                            //
+                            //
+                            //     //
+                            //     //
+                            //     // Some(vec) => {
+                            //     //
+                            //     // },
+                            //     // None => {println!("Got none");}
+                            //     }
+
+
+
+
                         },
                         Err(e) => {}
                     }
@@ -89,15 +148,21 @@ use std::collections::hash_map::{HashMap, Entry};
         pub fn do_messaging(&mut self) {
             loop {
                 let msg = self.global_recv.recv().unwrap();
-                println!("{:?}", msg);
+                //rintln!("global_recv.len = {:?}", self.global_recv.len());
                 if msg.publish_tag == self.bus_id{
                     //handle message for self
                     return
                 }
                 match self.feeds.get_mut(){
                         Ok(exclusive_feeds) => {
+                            //println!("Here: msg.publish_tag = {:?}", msg.publish_tag);
+                            //println!("exclusive_feeds = {:?}", exclusive_feeds);
                                 match exclusive_feeds.get(&msg.publish_tag){
-                                    Some(feed_subscribers) => {feed_subscribers.iter().for_each(|x| x.send(msg.clone()).unwrap())},
+                                    Some(feed_subscribers) => {
+                                        //println!("feed = {:?}", feed_subscribers);
+                                        feed_subscribers.iter().for_each(|x| {
+                                        //println!("Sending {:?}", msg);
+                                        x.send(msg.clone()).unwrap()})},
                                     None => {drop(msg)}
                                 }
                         },

@@ -108,34 +108,6 @@ use std::collections::hash_map::{HashMap, Entry};
                                 else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); println!("Here");}
                              })
                             .or_insert({let mut vec = Vec::new(); vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); vec});
-
-
-
-                            // match exclusive_feeds.entry(&sub_tag.to_string()) {
-                            //
-                            //
-                            //
-                            //
-                            //     Entry::Vacant(exclusive_feeds) => {exclusive_feeds.insert(Vec::new().push(exclusive_subscribers.get(&component_id).unwrap().clone()));},
-                            //     Entry::Occupied(mut entry) => {
-                            //         let vec = entry.unwrap();
-                            //         println!("Here {:?}", &sub_tag.to_string());
-                            //         if vec.contains(exclusive_subscribers.get(&component_id).unwrap()) {println!("Returning... ?");return Ok(())}
-                            //         else {vec.push(exclusive_subscribers.get(&component_id).unwrap().clone()); println!("Here");}
-                            //     }
-                            //
-                            //
-                            //     //
-                            //     //
-                            //     // Some(vec) => {
-                            //     //
-                            //     // },
-                            //     // None => {println!("Got none");}
-                            //     }
-
-
-
-
                         },
                         Err(e) => {}
                     }

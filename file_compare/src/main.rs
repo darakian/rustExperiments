@@ -4,7 +4,6 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Sender, channel};
 use std::collections::hash_map::{DefaultHasher, HashMap, Entry};
-use std::cmp::Ordering;
 use std::fs::{self, File};
 
 //External imports
@@ -30,24 +29,6 @@ impl Fileinfo{
     }
 }
 
-impl PartialEq for Fileinfo{
-    fn eq(&self, other: &Fileinfo) -> bool {
-        (self.file_hash==other.file_hash)&&(self.file_len==other.file_len)
-    }
-}
-impl Eq for Fileinfo{}
-
-impl PartialOrd for Fileinfo{
-    fn partial_cmp(&self, other: &Fileinfo) -> Option<Ordering>{
-        self.file_len.partial_cmp(&other.file_len)
-    }
-}
-
-impl Ord for Fileinfo{
-    fn cmp(&self, other: &Fileinfo) -> Ordering {
-        self.file_len.cmp(&other.file_len)
-    }
-}
 
 impl Hash for Fileinfo{
     fn hash<H: Hasher>(&self, state: &mut H) {

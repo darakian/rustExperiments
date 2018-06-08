@@ -1,11 +1,12 @@
 [package]
 name = "file_compare"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Jon Moroney <darakian@gmail.com>"]
 
 [dependencies]
 clap = "2.30.0"
 rayon = "1.0"
+stacker = "0.1"
 
 [profile.release]
 lto = true

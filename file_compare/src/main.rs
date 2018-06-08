@@ -4,9 +4,10 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Sender, channel};
 use std::collections::hash_map::{DefaultHasher, HashMap, Entry};
-use std::fs::{self, File};
+use std::fs::{self, File, DirEntry};
 
 //External imports
+extern crate stacker;
 extern crate clap;
 extern crate rayon;
 use clap::{Arg, App};
@@ -38,7 +39,7 @@ impl Hash for Fileinfo{
 
 fn main() {
     let arguments = App::new("File Compare")
-                        .version("0.9.4")
+                        .version("0.2.0")
                         .author("Jon Moroney jmoroney@hawaii.edu")
                         .about("Compares file differences in steps")
                         .arg(Arg::with_name("directories")
@@ -58,7 +59,9 @@ fn main() {
     let search_dirs: Vec<_> = arguments.values_of("directories").unwrap().collect();
 
     search_dirs.par_iter().for_each_with(sender.clone(), |s, search_dir| {
-        traverse_and_spawn(Path::new(&search_dir), s.clone());
+        stacker::maybe_grow(32 * 1024, 1024 * 1024, || {
+            traverse_and_spawn(Path::new(&search_dir), s.clone());
+        });
     });
 
     drop(sender);
@@ -112,12 +115,22 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
 }
 
 fn traverse_and_spawn(current_path: &Path, sender: Sender<Fileinfo>) -> (){
-    if current_path.is_dir(){
-        let paths: Vec<_> = fs::read_dir(current_path).unwrap().map(|a| a.ok().expect("Unable to open directory for traversal")).collect();
-        paths.par_iter().for_each_with(sender, |s, dir_entry| {
-            traverse_and_spawn(dir_entry.path().as_path(), s.clone());
+    if !current_path.exists(){
+        return
+    }
+
+    if current_path.symlink_metadata().expect("Error getting Symlink Metadata").file_type().is_dir(){
+        let mut paths: Vec<DirEntry> = Vec::new();
+        match fs::read_dir(current_path) {
+                Ok(read_dir_results) => read_dir_results.filter(|x| x.is_ok()).for_each(|x| paths.push(x.unwrap())),
+                Err(e) => println!("Skipping {:?}. {:?}", current_path, e.kind()),
+            }
+        paths.into_par_iter().for_each_with(sender, |s, dir_entry| {
+            stacker::maybe_grow(32 * 1024, 1024 * 1024, || {
+                traverse_and_spawn(dir_entry.path().as_path(), s.clone());
+            });
         });
-    } else if current_path.is_file() {
-        sender.send(Fileinfo::new(0, current_path.metadata().unwrap().len(), current_path.to_path_buf())).unwrap();
-    } else {println!("Cannot open {:?}. Skipping.", current_path);}
+    } else if current_path.symlink_metadata().expect("Error getting Symlink Metadata").file_type().is_file(){
+        sender.send(Fileinfo::new(0, current_path.metadata().expect("Error with current path length").len(), /*fs::canonicalize(*/current_path.to_path_buf()/*).expect("Error canonicalizing path in struct creation.")*/)).expect("Error sending new fileinfo");
+    } else {}
 }

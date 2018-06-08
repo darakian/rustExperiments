@@ -117,7 +117,7 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
             let mut hash_buffer = [0;1];
             for _i in 0..=length {
                 match buffer_reader.read(&mut hash_buffer) {
-                    Ok(n) if n>0 => hasher.write(&hash_buffer[0..n]),
+                    Ok(n) if n>0 => hasher.write(&hash_buffer[0..=n]),
                     Ok(n) if n==0 => break,
                     Err(e) => println!("{:?} reading {:?}", e, input.file_paths.iter().next().expect("Error opening file for hashing")),
                     _ => println!("Should not be here"),

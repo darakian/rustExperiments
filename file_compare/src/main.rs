@@ -115,7 +115,7 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
         Ok(f) => {
             let mut buffer_reader = BufReader::new(f);
             let mut hash_buffer = [0;1];
-            for _i in 0..length {
+            for _i in 0..=length {
                 match buffer_reader.read(&mut hash_buffer) {
                     Ok(n) if n>0 => hasher.write(&hash_buffer[0..n]),
                     Ok(n) if n==0 => break,

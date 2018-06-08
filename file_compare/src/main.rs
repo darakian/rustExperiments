@@ -90,12 +90,13 @@ fn main() {
     }
 
     let mut sizes = File::create(format!("filesizes")).unwrap();
+    //println!("{:?}", sizes);
     let mut complete_files: Vec<Fileinfo> = files_of_lengths.into_par_iter().map(|x|
         x.1
     ).flatten().collect();
     complete_files.iter().for_each(|x| write!(sizes, "{}\n", x.file_len).unwrap());
 
-    for i in 1..=4096{
+    for i in 1..4096{
         let mut hashesfile = File::create(format!("data/{:05}",i)).unwrap();
         //write!(file, "Step {}\n", i).unwrap();
         complete_files.par_iter_mut().for_each(|x| hash_and_update(x, i));
@@ -115,9 +116,9 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
         Ok(f) => {
             let mut buffer_reader = BufReader::new(f);
             let mut hash_buffer = [0;1];
-            for _i in 0..=length {
+            for _i in 0..length {
                 match buffer_reader.read(&mut hash_buffer) {
-                    Ok(n) if n>0 => hasher.write(&hash_buffer[0..=n]),
+                    Ok(n) if n>0 => hasher.write(&hash_buffer[0..n]),
                     Ok(n) if n==0 => break,
                     Err(e) => println!("{:?} reading {:?}", e, input.file_paths.iter().next().expect("Error opening file for hashing")),
                     _ => println!("Should not be here"),

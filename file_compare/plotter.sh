@@ -1,7 +1,7 @@
 #!/bin/bash
-./target/release/file_compare $1
 mkdir -p data
 mkdir -p plots
+./target/release/file_compare $1
 for i in $(ls data)
 do
   #gnuplot -e "datafile='data/${i}'; outputfile='plots/${i}Bytes.png'; bytes='${i}'" plotter1.plg

@@ -95,7 +95,7 @@ fn main() {
     ).flatten().collect();
     complete_files.iter().for_each(|x| write!(sizes, "{}\n", x.file_len).unwrap());
 
-    for i in 1..4096{
+    for i in 1..=4096{
         let mut hashesfile = File::create(format!("data/{:05}",i)).unwrap();
         //write!(file, "Step {}\n", i).unwrap();
         complete_files.par_iter_mut().for_each(|x| hash_and_update(x, i));

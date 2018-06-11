@@ -18,14 +18,15 @@ struct Fileinfo{
     file_hash: u64,
     file_len: u64,
     file_paths: Vec<PathBuf>,
-    da_4k: [u8;4096]
+    da_4k: [u8;4096],
+    to_read: bool
 }
 
 impl Fileinfo{
-    fn new(hash: u64, length: u64, path: PathBuf, input_buf: [u8;4096]) -> Self{
+    fn new(hash: u64, length: u64, path: PathBuf, read: bool) -> Self{
         let mut set = Vec::<PathBuf>::new();
         set.push(path);
-        Fileinfo{file_hash: hash, file_len: length, file_paths: set, da_4k: input_buf}
+        Fileinfo{file_hash: hash, file_len: length, file_paths: set, da_4k: [0;4096], to_read: read}
     }
 }
 
@@ -94,6 +95,18 @@ fn main() {
 }
 
 fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
+    if input.to_read {
+        match fs::File::open(input.file_paths.iter().next().unwrap()) {
+            Ok(f) => {
+                let mut buffer_reader = BufReader::new(f);
+                let mut hash_buffer = [0;4096];
+                buffer_reader.read(&mut hash_buffer).unwrap();
+                input.da_4k = hash_buffer;
+            }
+            Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, input.file_paths.iter().next().unwrap())}
+        }
+    }
+
     let mut hasher = DefaultHasher::new();
     hasher.write(&input.da_4k[0..length as usize]);
     input.file_hash=hasher.finish();
@@ -116,14 +129,8 @@ fn traverse_and_spawn(current_path: &Path, sender: Sender<Fileinfo>) -> (){
             });
         });
     } else if current_path.symlink_metadata().expect("Error getting Symlink Metadata").file_type().is_file(){
-        match fs::File::open(current_path) {
-            Ok(f) => {
-                let mut buffer_reader = BufReader::new(f);
-                let mut hash_buffer = [0;4096];
-                buffer_reader.read(&mut hash_buffer).unwrap();
-                sender.send(Fileinfo::new(0, current_path.metadata().expect("Error with current path length").len(), current_path.to_path_buf(), hash_buffer)).unwrap();
-            }
-            Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, current_path)}
-        }
+
+        sender.send(Fileinfo::new(0, current_path.metadata().expect("Error with current path length").len(), current_path.to_path_buf(), true)).unwrap();
+
     } else {}
 }

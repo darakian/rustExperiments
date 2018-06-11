@@ -13,20 +13,19 @@ extern crate rayon;
 use clap::{Arg, App};
 use rayon::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct Fileinfo{
     file_hash: u64,
     file_len: u64,
     file_paths: Vec<PathBuf>,
-    hashed: bool,
-    to_hash: bool,
+    da_4k: [u8;4096]
 }
 
 impl Fileinfo{
-    fn new(hash: u64, length: u64, path: PathBuf) -> Self{
+    fn new(hash: u64, length: u64, path: PathBuf, input_buf: [u8;4096]) -> Self{
         let mut set = Vec::<PathBuf>::new();
         set.push(path);
-        Fileinfo{file_hash: hash, file_len: length, file_paths: set, hashed: false, to_hash: false}
+        Fileinfo{file_hash: hash, file_len: length, file_paths: set, da_4k: input_buf}
     }
 }
 
@@ -96,22 +95,8 @@ fn main() {
 
 fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
     let mut hasher = DefaultHasher::new();
-    match fs::File::open(input.file_paths.iter().next().expect("Error opening file for hashing")) {
-        Ok(f) => {
-            let mut buffer_reader = BufReader::new(f);
-            let mut hash_buffer = [0;1];
-            for _i in 0..length {
-                match buffer_reader.read(&mut hash_buffer) {
-                    Ok(n) if n>0 => hasher.write(&hash_buffer[0..n]),
-                    Ok(n) if n==0 => break,
-                    Err(e) => println!("{:?} reading {:?}", e, input.file_paths.iter().next().expect("Error opening file for hashing")),
-                    _ => println!("Should not be here"),
-                }
-            }
-            input.file_hash=hasher.finish();
-        }
-        Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, input.file_paths.iter().next().expect("Error opening file for hashing"))}
-    }
+    hasher.write(&input.da_4k[0..length as usize]);
+    input.file_hash=hasher.finish();
 }
 
 fn traverse_and_spawn(current_path: &Path, sender: Sender<Fileinfo>) -> (){
@@ -131,6 +116,14 @@ fn traverse_and_spawn(current_path: &Path, sender: Sender<Fileinfo>) -> (){
             });
         });
     } else if current_path.symlink_metadata().expect("Error getting Symlink Metadata").file_type().is_file(){
-        sender.send(Fileinfo::new(0, current_path.metadata().expect("Error with current path length").len(), /*fs::canonicalize(*/current_path.to_path_buf()/*).expect("Error canonicalizing path in struct creation.")*/)).expect("Error sending new fileinfo");
+        match fs::File::open(current_path) {
+            Ok(f) => {
+                let mut buffer_reader = BufReader::new(f);
+                let mut hash_buffer = [0;4096];
+                buffer_reader.read(&mut hash_buffer).unwrap();
+                sender.send(Fileinfo::new(0, current_path.metadata().expect("Error with current path length").len(), current_path.to_path_buf(), hash_buffer)).unwrap();
+            }
+            Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, current_path)}
+        }
     } else {}
 }

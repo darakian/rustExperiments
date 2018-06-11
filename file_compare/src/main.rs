@@ -102,6 +102,7 @@ fn hash_and_update(input: &mut Fileinfo, length: u64) -> (){
                 let mut hash_buffer = [0;4096];
                 buffer_reader.read(&mut hash_buffer).unwrap();
                 input.da_4k = hash_buffer;
+                input.to_read=false;
             }
             Err(e) => {println!("Error:{} when opening {:?}. Skipping.", e, input.file_paths.iter().next().unwrap())}
         }

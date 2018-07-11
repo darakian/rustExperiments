@@ -4,7 +4,7 @@ use quickcheck::{TestResult, quickcheck};
 fn main() {
 
         fn prop(xs: Vec<i64>) -> TestResult {
-            if xs.len() == 0 {
+            if xs.len() < 3 {
               return TestResult::discard()
               }
             TestResult::from_bool(max_product_naive(xs.clone()).unwrap() == max_product_better(xs.clone()).unwrap())

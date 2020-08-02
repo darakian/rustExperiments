@@ -44,8 +44,16 @@ fn main() {
             println!("No file");
             return},
     }
+    let mut plot_vec = vec![vec!(); hash_iterations as usize];
     for token in results.iter(){
-        println!("{:?}", token);
+        print!("{}\t", token.0);
+        for (index, entry) in token.1.iter().enumerate(){
+            plot_vec[index].push(entry);
+        }
+    }
+    println!("");
+    for row in plot_vec.iter(){
+        println!("{:?}", row);
     }
 }
 

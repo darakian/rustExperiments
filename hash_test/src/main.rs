@@ -57,7 +57,7 @@ fn main() {
     }
 }
 
-fn bench_sip_hash(file: String, hash_iterations: u32) -> Vec<Duration> {
+fn bench_sip_hash(file: String, hash_iterations: u32) -> Vec<u128> {
     let mut results = Vec::with_capacity(hash_iterations as usize);
     let mut file = File::open(file).expect("Error opening file");
     let mut buffer: Vec<u8> = Vec::new();
@@ -67,12 +67,12 @@ fn bench_sip_hash(file: String, hash_iterations: u32) -> Vec<Duration> {
         let now = Instant::now();
         sip_hasher.write(&buffer);
         sip_hasher.finish();
-        results.push(now.elapsed());
+        results.push(now.elapsed().as_nanos());
     }
     results
 }
 
-fn bench_sea_hash(file: String, hash_iterations: u32) -> Vec<Duration> {
+fn bench_sea_hash(file: String, hash_iterations: u32) -> Vec<u128> {
     let mut results = Vec::with_capacity(hash_iterations as usize);
     let mut file = File::open(file).expect("Error opening file");
     let mut buffer: Vec<u8> = Vec::new();
@@ -82,12 +82,12 @@ fn bench_sea_hash(file: String, hash_iterations: u32) -> Vec<Duration> {
         let now = Instant::now();
         hasher.write(&buffer);
         hasher.finish();
-        results.push(now.elapsed());
+        results.push(now.elapsed().as_nanos());
     }
     results
 }
 
-fn bench_blake3_hash(file: String, hash_iterations: u32) -> Vec<Duration> {
+fn bench_blake3_hash(file: String, hash_iterations: u32) -> Vec<u128> {
     let mut results = Vec::with_capacity(hash_iterations as usize);
     let mut file = File::open(file).expect("Error opening file");
     let mut buffer: Vec<u8> = Vec::new();
@@ -97,7 +97,7 @@ fn bench_blake3_hash(file: String, hash_iterations: u32) -> Vec<Duration> {
         let now = Instant::now();
         hasher.update(&buffer);
         hasher.finalize();
-        results.push(now.elapsed());
+        results.push(now.elapsed().as_nanos());
     }
     results
 }

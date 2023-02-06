@@ -7,5 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = {version = "4.1.4", features = ["derive"]}
+rayon = "1.6"
+walkdir = "2"
+crossbeam-channel = "0.5"
 img_hash = "3.2.0"
 image = "0.23"

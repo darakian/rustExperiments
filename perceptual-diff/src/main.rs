@@ -1,7 +1,11 @@
 extern crate image;
 extern crate img_hash;
+use rayon::prelude::*;
+use walkdir::WalkDir;
+use std::path::PathBuf;
 use clap::{Parser, ValueEnum}; 
 use img_hash::{HasherConfig, HashAlg};
+use crossbeam_channel::unbounded;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -20,21 +24,32 @@ struct Args {
  fn main() {
     let args = Args::parse();
     let image_hasher = HasherConfig::new().to_hasher();
-    let mut matches = Vec::new();
 
     let the_image = image::open(args.image).unwrap();
     let source_hash = image_hasher.hash_image(&the_image);
-    for other_image_path in args.others.iter() {
-        let other_image = image::open(other_image_path).unwrap();
+    let (path_sender, path_recv) = unbounded();
+    args.others.par_iter().for_each(|path| {
+    let files: Vec<_> = WalkDir::new(path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .map(|x| x.path().to_owned())
+        .collect();
+        path_sender.send(files);
+    });
+    let paths: Vec<_> = path_recv.iter().flatten().collect();
+
+    let (image_path_sender, image_path_recv) = unbounded();
+    paths.into_par_iter().for_each(|path| {
+        let image_hasher = HasherConfig::new().to_hasher();
+        let other_image = image::open(&path).unwrap();
         let other_hash = image_hasher.hash_image(&other_image);
-        //println!("{:?}", source_hash.dist(&other_hash));
         if source_hash.dist(&other_hash) < args.dist {
-            matches.push(other_image_path);
+            image_path_sender.send(path);
         }
-    }
+    });
 
     println!("Matches:");
-    for close_enough in matches.iter(){
+    for close_enough in image_path_recv.iter(){
         println!("{:?}", close_enough);
     }
  }

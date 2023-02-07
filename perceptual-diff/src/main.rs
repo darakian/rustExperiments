@@ -36,6 +36,7 @@ struct Args {
         .collect();
         path_sender.send(files);
     });
+    drop(path_sender);
     let paths: Vec<_> = path_recv.iter().flatten().collect();
 
     let (image_path_sender, image_path_recv) = unbounded();
@@ -47,6 +48,7 @@ struct Args {
             image_path_sender.send(path);
         }
     });
+    drop(image_path_sender);
 
     println!("Matches:");
     for close_enough in image_path_recv.iter(){

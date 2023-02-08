@@ -32,6 +32,7 @@ struct Args {
     let files: Vec<_> = WalkDir::new(path)
         .into_iter()
         .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
         .map(|x| x.path().to_owned())
         .collect();
         path_sender.send(files);
